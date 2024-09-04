@@ -1,18 +1,10 @@
-# REPO NAME 
+# DevRel Examples
 
-```
-Placeholder
+This repository contains examples from the Developer Relations team @ Databricks
 
-Fill here a description at a functional level - what is this content doing
-```
+## How to use
 
-## TODO: add more details and explanations
-
-
-## Installation
-
-Detail how to use/install this content
-
+To use notebooks in the `./notebooks` directory of this repo, import them into Databricks. You can also create a [Databricks Github Folder](https://docs.databricks.com/en/repos/index.html) to clone the entire repository into your Databricks workspace in one step.
 
 ## How to get help
 
