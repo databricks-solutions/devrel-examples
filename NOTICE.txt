@@ -1,3 +1,100 @@
-## Support
-Databricks does not offer official support for Databricks Solutions and its repository.
-For any issue with this assets or the demos installed, please open an issue using github and the team will have a look on a best effort basis.
+Copyright (2024) Databricks, Inc.
+
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+
+________________
+This Software contains code from the following open source projects, licensed under the Apache 2.0  license (https://www.apache.org/licenses/LICENSE-2.0):
+
+huggingface/transformers - https://github.com/huggingface/transformers
+Copyright transformers authors
+
+huggingface/peft - https://github.com/huggingface/peft
+Copyright peft authors
+
+allenai/OLMo - https://github.com/allenai/OLMo
+Copyright OLMo authors
+
+huggingface/datasets - https://github.com/huggingface/datasets
+Copyright datasets authors
+
+mlflow/mlflow - https://github.com/mlflow/mlflow
+Copyright 2018 Databricks, Inc.  All rights reserved.
+
+AnswerDotAI/fasthtml - https://github.com/AnswerDotAI/fasthtml
+Copyright fasthtml authors 
+
+huggingface/huggingface_hub - https://github.com/huggingface/huggingface_hub
+Copyright huggingface_hub authors
+
+
+
+________________
+This Software contains code from the following open source projects, licensed under the BSD 3-Clause license (https://opensource.org/license/bsd-3-clause):
+
+pytorch/pytorch - https://github.com/pytorch/pytorch
+From PyTorch:
+Copyright (c) 2016-     Facebook, Inc            (Adam Paszke)
+Copyright (c) 2014-     Facebook, Inc            (Soumith Chintala)
+Copyright (c) 2011-2014 Idiap Research Institute (Ronan Collobert)
+Copyright (c) 2012-2014 Deepmind Technologies    (Koray Kavukcuoglu)
+Copyright (c) 2011-2012 NEC Laboratories America (Koray Kavukcuoglu)
+Copyright (c) 2011-2013 NYU                      (Clement Farabet)
+Copyright (c) 2006-2010 NEC Laboratories America (Ronan Collobert, Leon Bottou, Iain Melvin, Jason Weston)
+Copyright (c) 2006      Idiap Research Institute (Samy Bengio)
+Copyright (c) 2001-2004 Idiap Research Institute (Ronan Collobert, Samy Bengio, Johnny Mariethoz)
+
+From Caffe2:
+Copyright (c) 2016-present, Facebook Inc. All rights reserved.
+
+All contributions by Facebook:
+Copyright (c) 2016 Facebook Inc.
+
+All contributions by Google:
+Copyright (c) 2015 Google Inc.
+All rights reserved.
+
+All contributions by Yangqing Jia:
+Copyright (c) 2015 Yangqing Jia
+All rights reserved.
+
+All contributions by Kakao Brain:
+Copyright 2019-2020 Kakao Brain
+
+All contributions by Cruise LLC:
+Copyright (c) 2022 Cruise LLC.
+All rights reserved.
+
+All contributions by Arm:
+Copyright (c) 2021, 2023-2024 Arm Limited and/or its affiliates
+
+All contributions from Caffe:
+Copyright(c) 2013, 2014, 2015, the respective contributors
+All rights reserved.
+
+All other contributions:
+Copyright(c) 2015, 2016 the respective contributors
+All rights reserved.
+
+Caffe2 uses a copyright model similar to Caffe: each contributor holds
+copyright over their contributions to Caffe2. The project versioning records
+all such contribution and copyright details. If a contributor wants to further
+mark their specific copyright on a particular contribution, they should
+indicate their copyright solely in the commit message of the change when it is
+committed.
+
+All rights reserved.
+
+pandas-dev/pandas - https://github.com/pandas-dev/pandas
+Copyright (c) 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team. All rights reserved.
+Copyright (c) 2011-2024, Open source contributors.
+
+numpy/numpy - https://github.com/numpy/numpy
+Copyright (c) 2005-2024, NumPy Developers.
+All rights reserved.
+
+_____________
+This Software contains code from the following open source projects, licensed under the MDT License Agreement:
+
+matplotlib/matplotlib - https://github.com/matplotlib/matplotlib
+Copyright © 2012- Matplotlib Development Team; All Rights Reserved
+License - https://github.com/matplotlib/matplotlib/blob/main/LICENSE/LICENSE
