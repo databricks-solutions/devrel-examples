@@ -21,6 +21,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::262168905337:role/service.devrel-examples  # Likely name based on repository
           audience: sts.amazonaws.com  # Matches the aud condition in the trust policy
+          aws-region: us-west-2
       
       - name: Create dummy HTML file
         run: echo "<html><body><h1>Hello, S3!</h1></body></html>" > dummy.html
