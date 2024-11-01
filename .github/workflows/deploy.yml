@@ -17,4 +17,4 @@ jobs:
       run: echo "<html><body><h1>Hello, S3!</h1></body></html>" > dummy.html
 
     - name: Upload HTML to S3
-      run: aws s3 cp dummy.html s3://your-bucket-name/path/to/directory/dummy.html
+      run: aws s3 cp dummy.html s3://databricks-web-files/devrel/dummy.html
