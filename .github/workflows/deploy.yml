@@ -1,32 +1,33 @@
 name: Upload HTML to S3
-
 on:
   workflow_dispatch:
   push:
     branches:
       - main
 env:
-  AWS_REGION : "us-west-2"
-# permission can be added at job level or workflow level
+  AWS_REGION: "us-west-2"
+
 permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
+
 jobs:
   S3PackageUpload:
     runs-on: ubuntu-latest
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v4
+      
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::262168905337:oidc-provider/token.actions.githubusercontent.com
-          role-session-name: samplerolesession
+          role-to-assume: arn:aws:iam::262168905337:role/devrel-examples-github-oidc-role  # Likely name based on repository
+          audience: sts.amazonaws.com  # Matches the aud condition in the trust policy
           aws-region: ${{ env.AWS_REGION }}
-      # Upload a file to AWS s3
+      
       - name: Create dummy HTML file
         run: echo "<html><body><h1>Hello, S3!</h1></body></html>" > dummy.html
-
+      
       - name: Upload HTML to S3
         run: aws s3 cp dummy.html s3://databricks-web-files/devrel/dummy.html
         
