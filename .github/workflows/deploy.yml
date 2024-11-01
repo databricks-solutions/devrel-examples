@@ -1,0 +1,20 @@
+name: Upload HTML to S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Create dummy HTML file
+      run: echo "<html><body><h1>Hello, S3!</h1></body></html>" > dummy.html
+
+    - name: Upload HTML to S3
+      run: aws s3 cp dummy.html s3://your-bucket-name/path/to/directory/dummy.html
