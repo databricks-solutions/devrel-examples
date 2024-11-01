@@ -19,7 +19,7 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
-          role-to-assume: arn:aws:iam::262168905337:role/devrel-examples-github-oidc-role  # Likely name based on repository
+          role-to-assume: arn:aws:iam::262168905337:role/service.devrel-examples  # Likely name based on repository
           audience: sts.amazonaws.com  # Matches the aud condition in the trust policy
       
       - name: Create dummy HTML file
