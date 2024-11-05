@@ -1,4 +1,4 @@
-name: Upload HTML to S3
+name: Publish notebooks
 on:
   workflow_dispatch:
   push:
@@ -10,22 +10,31 @@ permissions:
   contents: read    # This is required for actions/checkout
 
 jobs:
-  S3PackageUpload:
+  deploy-book:
     runs-on: ubuntu-latest
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v4
-      
+      # Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      # Dependencies
+      - name: Install dependencies
+        run: |
+          pip install -qr notebooks/requirements.txt
+      # Build the example book
+      - name: Build book
+        run: |
+          jupyter-book build notebooks/
+      # Get credentials
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
           role-to-assume: arn:aws:iam::141076505187:role/service.devrel-examples
           audience: sts.amazonaws.com  # Matches the aud condition in the trust policy
           aws-region: us-west-2
-      
-      - name: Create dummy HTML file
-        run: echo "<html><body><h1>Hello, S3!</h1></body></html>" > dummy.html
-      
+      # Upload via aws sync
       - name: Upload HTML to S3
-        run: aws s3 cp dummy.html s3://databricks-web-files/devrel/dummy.html
-        
+        run: aws s3 sync notebooks/_build/html s3://databricks-web-files/devrel
