@@ -7,3 +7,6 @@ parts:
 - caption: All Notebooks
   chapters:
   - glob: nbs/*
+- caption: OSS AI
+  chapters:
+  - file: mlflow/2024-11-27-dspy.ipynb
