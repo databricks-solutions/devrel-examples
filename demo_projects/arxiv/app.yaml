@@ -1,0 +1,15 @@
+command:
+  - streamlit
+  - run
+  - app/main.py
+env:
+  - name: DATABRICKS_HOST
+    valueFrom: host
+  - name: DATABRICKS_TOKEN
+    valueFrom: token
+  - name: ARXIV_CATALOG
+    value: arxiv_demo
+  - name: ARXIV_SCHEMA
+    value: main
+  - name: ARXIV_VOLUME
+    value: pdfs

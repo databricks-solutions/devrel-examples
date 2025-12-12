@@ -13,7 +13,9 @@ import streamlit as st
 
 from arxiv_demo.config import DEFAULT_CONFIG
 from arxiv_demo.ingestion import ArxivIngestion
+from arxiv_demo.ingestion import ArxivIngestion
 from arxiv_demo.kie import KIEClient
+from arxiv_demo.chat import ChatClient
 from arxiv_demo.parsing import DocumentParser
 
 st.set_page_config(
@@ -31,6 +33,8 @@ if "parsed_papers" not in st.session_state:
     st.session_state.parsed_papers = {}  # arxiv_id -> parsed content
 if "papers_for_ka" not in st.session_state:
     st.session_state.papers_for_ka = set()
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 
 @st.cache_resource
@@ -43,6 +47,12 @@ def get_ingestion():
 def get_kie_client():
     """Get cached KIE client."""
     return KIEClient()
+
+
+@st.cache_resource
+def get_chat_client():
+    """Get cached chat client."""
+    return ChatClient()
 
 
 @st.cache_resource
@@ -531,12 +541,59 @@ def ka_manager_tab():
 
 
 # =============================================================================
+# PHASE 4: CHAT
+# =============================================================================
+def chat_tab():
+    """Chat with the Knowledge Assistant."""
+    st.header("Phase 4: Chat with Assistant")
+    st.caption("Ask questions to your Knowledge Assistant (RAG)")
+
+    client = get_chat_client()
+
+    # Check if endpoint is configured
+    if not client.endpoint_name:
+        st.warning("Knowledge Assistant endpoint not configured. Set KA_ENDPOINT in .env or config.")
+        return
+
+    # Display chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat input
+    if prompt := st.chat_input("Ask a question about the papers..."):
+        # Add user message to history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Display assistant response
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+            
+            try:
+                # Stream response
+                for chunk in client.chat_stream(st.session_state.messages):
+                    full_response += chunk
+                    message_placeholder.markdown(full_response + "▌")
+                
+                message_placeholder.markdown(full_response)
+                
+                # Add assistant message to history
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
+            except Exception as e:
+                st.error(f"Error chatting with agent: {e}")
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 def main():
     st.title("📚 Arxiv Paper Analysis")
 
-    tab1, tab2, tab3 = st.tabs(["🔍 Search", "📋 Review", "📁 KA Manager"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📋 Review", "📁 KA Manager", "💬 Chat"])
 
     with tab1:
         search_tab()
@@ -546,6 +603,9 @@ def main():
 
     with tab3:
         ka_manager_tab()
+
+    with tab4:
+        chat_tab()
 
 
 if __name__ == "__main__":
