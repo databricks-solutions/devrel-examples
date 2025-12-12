@@ -68,6 +68,85 @@ If running this code on a Databricks cluster (e.g. via Web Terminal or Notebook)
     ARXIV_VOLUME=pdfs
     ```
 
+## Agent Setup
+
+Before running the app, you need to create two agents in Databricks: a **Knowledge Assistant** (for RAG) and a **KIE Agent** (for extraction).
+
+### 1. Create Knowledge Assistant
+1.  Navigate to **Agents** > **Create Agent**.
+2.  Select **Knowledge Source**: Unity Catalog Volume (`arxiv_demo.main.pdfs`).
+3.  Name it: `arxiv-papers`.
+4.  Deploy the agent and copy the **Serving Endpoint Name** (e.g., `agents_arxiv-papers`).
+5.  Set `KA_ENDPOINT=agents_arxiv-papers` in your `.env`.
+
+### 2. Create KIE Agent (Agent Bricks)
+1.  Navigate to **Agents** > **Create Agent**.
+2.  Select **Pattern**: "Key Information Extraction" (or similar Agent Brick).
+3.  Name it: `arxiv-kie`.
+    *   Use the following JSON Schema:
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Generated Schema",
+      "type": "object",
+      "properties": {
+        "affiliation": {
+          "description": "The \"affiliation\" field must contain the name of the organization, institution, or company with which the authors are associated. This information should be extracted as a string and may include department names, university names, or corporate entities. Ensure that the extracted content is precise and accurately reflects the authors' affiliations as stated in the source document.",
+          "anyOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "contributions": {
+          "description": "The \"contributions\" field must contain an array of strings that explicitly list the contributions made by the authors to the dataset or research presented in the document. Each entry in the array should clearly articulate a specific contribution, such as data collection, analysis, or writing, and should not include vague or general statements. If no contributions are provided, this field should be set to null.",
+          "anyOf": [
+            { "type": "array", "items": { "type": "string" } },
+            { "type": "null" }
+          ]
+        },
+        "authors": {
+          "description": "The \"authors\" field must contain an array of strings, each representing the full name of an author associated with the dataset or research work. The names should be formatted as \"First Last\" without any titles or affiliations included. This field is required to accurately attribute contributions to the respective authors in the context of the dataset.",
+          "anyOf": [
+            { "type": "array", "items": { "type": "string" } },
+            { "type": "null" }
+          ]
+        },
+        "title": {
+          "description": "The \"title\" field must contain the complete title of the document or work being referenced. It should be a string that accurately reflects the main subject or focus of the content, without any abbreviations or alterations. Ensure that the title is extracted as it appears in the source material, maintaining proper capitalization and punctuation.",
+          "anyOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "methodology": {
+          "type": "string",
+          "description": "The \"methodology\" field must describe the specific research methods, experimental designs, techniques, or approaches used to conduct the study. This includes data collection procedures, model architectures, training strategies, evaluation protocols, and any novel technical contributions to the research process itself."
+        },
+        "limitations": {
+          "type": "array",
+          "description": "The \"limitations\" field must contain an array of strings listing the acknowledged weaknesses, constraints, and boundaries of the research. This includes scope restrictions, potential biases in data or methods, scenarios where the approach may fail, computational requirements, and areas identified for future improvement.",
+          "items": { "type": "string" }
+        },
+        "topics": {
+          "type": "array",
+          "description": "The \"topics\" field must list the main subject areas, research themes, and technical domains covered by the paper. This includes specific tasks addressed (e.g., question answering, code generation), model types (e.g., transformer, diffusion), and application areas (e.g., healthcare, robotics).",
+          "items": { "type": "string" }
+        }
+      },
+      "required": [
+        "affiliation",
+        "contributions",
+        "authors",
+        "title",
+        "methodology",
+        "limitations",
+        "topics"
+      ]
+    }
+    ```
+5.  Deploy the agent and copy the **Serving Endpoint Name**.
+6.  Set `KIE_ENDPOINT=agents_arxiv-kie` in your `.env`.
+
 ## Initialization
 
 Before running the app or evaluation, you need to populate your Unity Catalog Volume and Tables.
@@ -99,13 +178,16 @@ uv run streamlit run app/main.py
 ### Option 2: Run on Databricks
 You can run this project directly in a Databricks Notebook or Web Terminal.
 
-**Web Terminal**:
+**Method A: Databricks Runbook (Recommended)**
+Import the notebook at `notebooks/Runbook.ipynb` into your workspace. It guides you through the entire setup, ingestion, agent creation, and app execution interactively.
+
+**Method B: Web Terminal**:
 1.  Clone the repo into Databricks.
 2.  Open a Web Terminal.
 3.  Install dependencies: `pip install -r requirements.txt` (or install manually).
 4.  Run: `streamlit run app/main.py`.
 
-**Notebook**:
+**Method C: Custom Notebook**:
 1.  Create a notebook in the `app` directory.
 2.  Run the app inline:
     ```python
