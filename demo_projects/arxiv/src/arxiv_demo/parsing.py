@@ -129,6 +129,48 @@ class DocumentParser:
             has_figures=has_figures,
         )
 
+    def save_parsed_document(self, doc: ParsedDocument) -> bool:
+        """
+        Save parsed document to parsed_documents table.
+        """
+        # Escape single quotes
+        parsed_content_escaped = doc.text_content.replace("'", "''")
+        
+        delete_sql = f"DELETE FROM {self.config.full_schema}.parsed_documents WHERE arxiv_id = '{doc.arxiv_id}'"
+        
+        insert_sql = f"""
+        INSERT INTO {self.config.full_schema}.parsed_documents (
+            arxiv_id, parsed_content, page_count, element_count,
+            has_tables, has_figures, parsed_at
+        ) VALUES (
+            '{doc.arxiv_id}',
+            '{parsed_content_escaped}',
+            {doc.page_count},
+            {len(doc.elements)},
+            {str(doc.has_tables).upper()},
+            {str(doc.has_figures).upper()},
+            CURRENT_TIMESTAMP()
+        )
+        """
+        
+        try:
+            # Delete existing
+            self.client.statement_execution.execute_statement(
+                warehouse_id=self.config.warehouse_id,
+                statement=delete_sql,
+                wait_timeout="30s",
+            )
+            # Insert new
+            self.client.statement_execution.execute_statement(
+                warehouse_id=self.config.warehouse_id,
+                statement=insert_sql,
+                wait_timeout="50s",
+            )
+            return True
+        except Exception as e:
+            print(f"Error saving parsed document {doc.arxiv_id}: {e}")
+            return False
+
 
 def main():
     """Test parsing a document."""
