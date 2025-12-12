@@ -179,7 +179,7 @@ uv run streamlit run app/main.py
 You can run this project directly in a Databricks Notebook or Web Terminal.
 
 **Method A: Databricks Runbook (Recommended)**
-Import the notebook at `notebooks/Runbook.ipynb` into your workspace. It guides you through the entire setup, ingestion, agent creation, and app execution interactively.
+Import the notebook at `Runbook.ipynb` into your workspace. It guides you through the entire setup, ingestion, agent creation, and app execution interactively.
 
 **Method B: Web Terminal**:
 1.  Clone the repo into Databricks.
