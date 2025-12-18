@@ -21,7 +21,7 @@ from arxiv_demo.parsing import DocumentParser
 st.set_page_config(
     page_title="Arxiv Paper Analysis",
     page_icon="📚",
-    layout="wide",
+    layout="centered",
 )
 
 # Initialize session state
