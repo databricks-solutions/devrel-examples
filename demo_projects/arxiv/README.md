@@ -198,8 +198,188 @@ Import the notebook at `Runbook.ipynb` into your workspace. It guides you throug
     ```
     *Note: Streamlit inside notebooks has varying support depending on the runtime version.*
 
-## Databricks Apps (Upcoming)
-Support for deploying this strictly as a [Databricks App](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) is coming soon.
+## Databricks Apps Deployment
+
+Deploy this app as a [Databricks App](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) for production use.
+
+### How Authentication Works
+
+Databricks Apps use **service principal OAuth** for authentication. When your app runs:
+
+1. The runtime injects `DATABRICKS_CLIENT_ID`, `DATABRICKS_CLIENT_SECRET`, and `DATABRICKS_HOST` environment variables
+2. The Databricks SDK automatically uses these credentials when you create a `WorkspaceClient()` without arguments
+3. For serving endpoints, use `ws.serving_endpoints.get_open_ai_client()` which handles OAuth token exchange automatically
+
+**Key insight**: You don't need to manage tokens manually. The SDK handles everything if you:
+- Use `WorkspaceClient()` without explicit credentials
+- Use the SDK's built-in `get_open_ai_client()` for OpenAI-compatible endpoints
+
+### Prerequisites
+
+Before deploying, ensure you have:
+
+1. **Databricks CLI** configured with your workspace profile
+2. **Unity Catalog resources** created:
+   - Catalog: `arxiv_demo`
+   - Schema: `arxiv_demo.main`
+   - Volume: `arxiv_demo.main.pdfs`
+3. **Agents deployed** with serving endpoints:
+   - Knowledge Assistant endpoint (e.g., `ka-xxxxx-endpoint`)
+   - KIE Agent endpoint (e.g., `kie-xxxxx-endpoint`)
+4. **SQL Warehouse** available (for `ai_parse_document`)
+
+### Configuration Files
+
+**`app.yaml`** - Defines the app runtime:
+```yaml
+command:
+  - streamlit
+  - run
+  - app/main.py
+  - --server.port
+  - "8000"
+  - --server.address
+  - "0.0.0.0"
+env:
+  # Required for local package imports
+  - name: PYTHONPATH
+    value: /app/python/source_code
+  # Auth - automatically set by Databricks Apps runtime
+  - name: DATABRICKS_HOST
+    valueFrom: host
+  # Unity Catalog resources
+  - name: ARXIV_CATALOG
+    value: arxiv_demo
+  - name: ARXIV_SCHEMA
+    value: main
+  - name: ARXIV_VOLUME
+    value: pdfs
+  # SQL Warehouse for ai_parse_document
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: <your-warehouse-id>
+  # Agent endpoints
+  - name: KIE_ENDPOINT
+    value: <your-kie-endpoint-name>
+  - name: KA_ENDPOINT
+    value: <your-ka-endpoint-name>
+```
+
+**`databricks.yml`** - DAB bundle configuration:
+```yaml
+bundle:
+  name: arxiv-demo
+
+resources:
+  apps:
+    arxiv-app:
+      name: arxiv-app
+      description: "Arxiv Knowledge Assistant Curator App"
+      source_code_path: .
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      profile: <your-profile>
+```
+
+### Grant Service Principal Permissions
+
+After deployment, the app's service principal needs permissions to access resources. Run this Python script to grant them programmatically:
+
+```python
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import (
+    ServingEndpointAccessControlRequest,
+    ServingEndpointPermissionLevel
+)
+from databricks.sdk.service.sql import (
+    WarehouseAccessControlRequest,
+    WarehousePermissionLevel
+)
+
+w = WorkspaceClient(profile='<your-profile>')
+
+# Get the service principal ID from the app (visible in Databricks Apps UI)
+sp_id = '<app-service-principal-id>'  # e.g., '9aecd2a5-df62-4cd1-be6e-0bf784e4bde3'
+
+# 1. Grant CAN_QUERY on serving endpoints
+ka_endpoint_id = '<ka-endpoint-guid>'   # Get from: databricks serving-endpoints list
+kie_endpoint_id = '<kie-endpoint-guid>'
+
+for endpoint_id in [ka_endpoint_id, kie_endpoint_id]:
+    w.serving_endpoints.update_permissions(
+        serving_endpoint_id=endpoint_id,
+        access_control_list=[
+            ServingEndpointAccessControlRequest(
+                service_principal_name=sp_id,
+                permission_level=ServingEndpointPermissionLevel.CAN_QUERY
+            )
+        ]
+    )
+
+# 2. Grant CAN_USE on SQL Warehouse
+warehouse_id = '<your-warehouse-id>'
+w.warehouses.update_permissions(
+    warehouse_id=warehouse_id,
+    access_control_list=[
+        WarehouseAccessControlRequest(
+            service_principal_name=sp_id,
+            permission_level=WarehousePermissionLevel.CAN_USE
+        )
+    ]
+)
+
+# 3. Grant Unity Catalog permissions
+stmts = [
+    f"GRANT USE CATALOG ON CATALOG arxiv_demo TO `{sp_id}`",
+    f"GRANT USE SCHEMA ON SCHEMA arxiv_demo.main TO `{sp_id}`",
+    f"GRANT READ VOLUME, WRITE VOLUME ON VOLUME arxiv_demo.main.pdfs TO `{sp_id}`"
+]
+for stmt in stmts:
+    w.statement_execution.execute_statement(
+        warehouse_id=warehouse_id,
+        statement=stmt,
+        wait_timeout='30s'
+    )
+
+print("Permissions granted!")
+```
+
+### Deploy the App
+
+```bash
+# Authenticate with the Databricks CLI
+databricks auth login --profile <your-profile>
+
+# Deploy the bundle
+databricks bundle deploy --profile <your-profile>
+
+# Check app status
+databricks apps get arxiv-app --profile <your-profile>
+```
+
+The app URL will be displayed in the output (e.g., `https://arxiv-app-xxxxx.aws.databricksapps.com`).
+
+### Dual-Mode Authentication (Local + Deployed)
+
+The app supports both local development and Databricks Apps deployment:
+
+```python
+from databricks.sdk import WorkspaceClient
+from arxiv_demo.config import DEFAULT_CONFIG
+
+# Works in both environments:
+# - Local: Uses profile from DATABRICKS_PROFILE env var
+# - Databricks Apps: Uses injected OAuth credentials
+ws_client = WorkspaceClient(profile=DEFAULT_CONFIG.profile)
+
+# For serving endpoints, use the SDK's built-in method:
+openai_client = ws_client.serving_endpoints.get_open_ai_client()
+```
+
+The SDK automatically detects the environment and uses the appropriate credentials.
 
 ## Knowledge Assistant Evaluation
 

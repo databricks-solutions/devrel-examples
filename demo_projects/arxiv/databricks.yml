@@ -6,11 +6,11 @@ resources:
     arxiv-app:
       name: arxiv-app
       description: "Arxiv Knowledge Assistant Curator App"
-      # Using app.yaml for command and env vars
-      
+      source_code_path: .
+
 targets:
   dev:
     mode: development
     default: true
     workspace:
-      host: https://e2-dogfood.staging.cloud.databricks.com
+      profile: dlcaspers

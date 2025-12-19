@@ -538,40 +538,12 @@ def ka_manager_tab():
 def get_openai_client():
     """Get OpenAI client configured for Databricks.
 
-    In Databricks Apps: Uses the service principal's M2M OAuth token
-    For local dev: Mints a short-lived token
+    Uses the SDK's built-in method which handles both:
+    - Databricks Apps: OAuth credentials (DATABRICKS_CLIENT_ID/SECRET)
+    - Local dev: CLI profile or PAT token
     """
-    # In Databricks Apps, WorkspaceClient() auto-configures with SP credentials
     ws_client = WorkspaceClient(profile=DEFAULT_CONFIG.profile)
-    host = ws_client.config.host.rstrip("/")
-
-    # Try to get token from the config's header factory
-    headers = {}
-    try:
-        # This populates Authorization header with the OAuth token
-        header_factory = getattr(ws_client.config, '_header_factory', None)
-        if header_factory:
-            header_factory()(headers)
-        auth_header = headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
-            return OpenAI(api_key=token, base_url=f"{host}/serving-endpoints")
-    except Exception:
-        pass
-
-    # Fallback for local development - mint a token
-    try:
-        token_response = ws_client.tokens.create(
-            comment="arxiv-demo-chat",
-            lifetime_seconds=600,
-        )
-        token = token_response.token_value
-        if token:
-            return OpenAI(api_key=token, base_url=f"{host}/serving-endpoints")
-    except Exception:
-        pass
-
-    raise ValueError("Could not get Databricks token for serving endpoints")
+    return ws_client.serving_endpoints.get_open_ai_client()
 
 
 def chat_with_ka(messages: list[dict]) -> str:
