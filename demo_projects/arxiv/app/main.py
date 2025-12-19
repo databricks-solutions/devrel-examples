@@ -1,22 +1,24 @@
 """
 Arxiv Paper Analysis - Streamlit App
 
-Three-phase workflow:
+Four-phase workflow:
 1. Search - get metadata from arxiv API
 2. Review - parse selected papers, review extracted content
 3. KA Manager - manage documents in Knowledge Assistant
+4. Chat - query the Knowledge Assistant
 """
 
 from datetime import date, timedelta
 
 import streamlit as st
+from openai import OpenAI
+from databricks.sdk import WorkspaceClient
 
 from arxiv_demo.config import DEFAULT_CONFIG
-from arxiv_demo.ingestion import ArxivIngestion
-from arxiv_demo.ingestion import ArxivIngestion
-from arxiv_demo.kie import KIEClient
-from arxiv_demo.chat import ChatClient
-from arxiv_demo.parsing import DocumentParser
+from arxiv_demo.ingestion import ArxivIngestion, DocumentParser, KIEClient
+
+# Get KA endpoint from config
+KA_ENDPOINT = DEFAULT_CONFIG.ka_endpoint
 
 st.set_page_config(
     page_title="Arxiv Paper Analysis",
@@ -47,12 +49,6 @@ def get_ingestion():
 def get_kie_client():
     """Get cached KIE client."""
     return KIEClient()
-
-
-@st.cache_resource
-def get_chat_client():
-    """Get cached chat client."""
-    return ChatClient()
 
 
 @st.cache_resource
@@ -359,58 +355,53 @@ def review_tab():
 
         with col2:
             status_icon = "✅" if status == "complete" else "❌"
-            # Always use arxiv title for simplicity
-            title = paper.title
-            
-            # Create expander with valid title
-            with st.expander(f"{status_icon} **{title}**"):
-                # Links row
-                col_link1, col_link2 = st.columns([1, 1])
-                with col_link1:
-                    st.link_button("📄 View PDF", paper.pdf_url)
-                with col_link2:
-                    clean_id = arxiv_id.replace("v1", "").replace("v2", "").replace("v3", "")
-                    st.link_button("🔗 Arxiv Page", f"https://arxiv.org/abs/{clean_id}")
+            title = paper.title[:70] + "..." if len(paper.title) > 70 else paper.title
 
+            # Show topics as inline tags if available
+            topics_str = ""
+            if extracted and extracted.topics:
+                valid_topics = [t for t in extracted.topics[:3] if t and "unknown" not in t.lower()]
+                if valid_topics:
+                    topics_str = " · " + " ".join([f"`{t}`" for t in valid_topics])
+
+            with st.expander(f"{status_icon} **{title}**{topics_str}"):
                 if status == "error":
                     st.error(f"Error: {data.get('error', 'Unknown error')}")
-                    # Still show arxiv metadata
-                    st.write("**Abstract (from arxiv):**")
                     st.write(paper.abstract[:500] + "..." if len(paper.abstract) > 500 else paper.abstract)
                 elif extracted:
-                    # Authors & Affiliation (skip if unknown)
-                    authors_str = ", ".join(extracted.authors) if extracted.authors else ", ".join(paper.authors)
-                    st.write(f"**Authors:** {authors_str}")
-                    if extracted.affiliation and extracted.affiliation not in ("<UNKNOWN>", "Unknown", ""):
-                        st.write(f"**Affiliation:** {extracted.affiliation}")
+                    # Abstract first - most interesting
+                    st.write(paper.abstract)
 
-                    # Topics as tags (filter out unknown/generic ones)
-                    valid_topics = [t for t in extracted.topics if t and "unknown" not in t.lower()]
-                    if valid_topics:
-                        st.write("**Topics:**")
-                        st.write(" ".join([f"`{t}`" for t in valid_topics]))
+                    st.divider()
 
-                    # Abstract from arxiv
-                    with st.container():
-                        st.write("**Abstract:**")
-                        st.write(paper.abstract[:600] + "..." if len(paper.abstract) > 600 else paper.abstract)
+                    # Compact metadata row
+                    authors_short = ", ".join(paper.authors[:3])
+                    if len(paper.authors) > 3:
+                        authors_short += f" +{len(paper.authors) - 3} more"
+                    st.caption(f"**Authors:** {authors_short}")
 
-                    # Key contributions
-                    if extracted.contributions:
-                        st.write("**Key Contributions:**")
-                        for contrib in extracted.contributions:
-                            st.write(f"- {contrib}")
+                    # Links
+                    col_link1, col_link2 = st.columns([1, 1])
+                    with col_link1:
+                        st.link_button("📄 PDF", paper.pdf_url)
+                    with col_link2:
+                        clean_id = arxiv_id.replace("v1", "").replace("v2", "").replace("v3", "")
+                        st.link_button("🔗 Arxiv", f"https://arxiv.org/abs/{clean_id}")
 
-                    # Methodology
-                    if extracted.methodology:
-                        st.write("**Methodology:**")
-                        st.write(extracted.methodology)
-
-                    # Limitations
-                    if extracted.limitations:
-                        st.write("**Limitations:**")
-                        for lim in extracted.limitations:
-                            st.write(f"- {lim}")
+                    # KIE-extracted insights (collapsible)
+                    if extracted.contributions or extracted.methodology or extracted.limitations:
+                        with st.expander("📊 KIE-Extracted Insights"):
+                            if extracted.contributions:
+                                st.write("**Key Contributions:**")
+                                for contrib in extracted.contributions:
+                                    st.write(f"- {contrib}")
+                            if extracted.methodology:
+                                st.write("**Methodology:**")
+                                st.write(extracted.methodology)
+                            if extracted.limitations:
+                                st.write("**Limitations:**")
+                                for lim in extracted.limitations:
+                                    st.write(f"- {lim}")
                 else:
                     st.info("Extraction pending")
 
@@ -543,48 +534,124 @@ def ka_manager_tab():
 # =============================================================================
 # PHASE 4: CHAT
 # =============================================================================
+
+def get_openai_client():
+    """Get OpenAI client configured for Databricks.
+
+    In Databricks Apps: Uses the service principal's M2M OAuth token
+    For local dev: Mints a short-lived token
+    """
+    # In Databricks Apps, WorkspaceClient() auto-configures with SP credentials
+    ws_client = WorkspaceClient(profile=DEFAULT_CONFIG.profile)
+    host = ws_client.config.host.rstrip("/")
+
+    # Try to get token from the config's header factory
+    headers = {}
+    try:
+        # This populates Authorization header with the OAuth token
+        header_factory = getattr(ws_client.config, '_header_factory', None)
+        if header_factory:
+            header_factory()(headers)
+        auth_header = headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+            return OpenAI(api_key=token, base_url=f"{host}/serving-endpoints")
+    except Exception:
+        pass
+
+    # Fallback for local development - mint a token
+    try:
+        token_response = ws_client.tokens.create(
+            comment="arxiv-demo-chat",
+            lifetime_seconds=600,
+        )
+        token = token_response.token_value
+        if token:
+            return OpenAI(api_key=token, base_url=f"{host}/serving-endpoints")
+    except Exception:
+        pass
+
+    raise ValueError("Could not get Databricks token for serving endpoints")
+
+
+def chat_with_ka(messages: list[dict]) -> str:
+    """Chat with Knowledge Assistant agent using OpenAI responses API."""
+    if not KA_ENDPOINT:
+        raise ValueError("Knowledge Assistant endpoint not configured. Set KA_ENDPOINT env var.")
+
+    try:
+        client = get_openai_client()
+    except ValueError as e:
+        raise ValueError(f"Authentication error: {e}")
+
+    # Use the responses API for Knowledge Assistant
+    try:
+        response = client.responses.create(
+            model=KA_ENDPOINT,
+            input=[{"role": msg["role"], "content": msg["content"]} for msg in messages],
+        )
+    except Exception as e:
+        error_msg = str(e)
+        if "401" in error_msg or "403" in error_msg:
+            raise ValueError(f"Permission error: {e}")
+        raise
+
+    # Extract text from response
+    texts = []
+    for output in response.output:
+        if hasattr(output, "content"):
+            for content in output.content:
+                if hasattr(content, "text"):
+                    texts.append(content.text)
+    return " ".join(texts) if texts else str(response)
+
+
 def chat_tab():
     """Chat with the Knowledge Assistant."""
     st.header("Phase 4: Chat with Assistant")
-    st.caption("Ask questions to your Knowledge Assistant (RAG)")
 
-    client = get_chat_client()
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.caption("Ask questions to your Knowledge Assistant (RAG)")
+    with col2:
+        if st.button("🔄 New Chat", key="new_chat"):
+            st.session_state.messages = []
+            st.rerun()
 
-    # Check if endpoint is configured
-    if not client.endpoint_name:
+    if not KA_ENDPOINT:
         st.warning("Knowledge Assistant endpoint not configured. Set KA_ENDPOINT in .env or config.")
         return
 
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # Create a container for messages - height provides scrollable area
+    chat_container = st.container(height=400)
 
-    # Chat input
+    # Display chat messages in the container
+    with chat_container:
+        if not st.session_state.messages:
+            st.caption("Ask questions about papers in your Knowledge Assistant.")
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    # Chat input below the container
     if prompt := st.chat_input("Ask a question about the papers..."):
-        # Add user message to history
+        # Add user message to history and display it
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        with chat_container:
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-        # Display assistant response
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
-            
-            try:
-                # Stream response
-                for chunk in client.chat_stream(st.session_state.messages):
-                    full_response += chunk
-                    message_placeholder.markdown(full_response + "▌")
-                
-                message_placeholder.markdown(full_response)
-                
-                # Add assistant message to history
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-                
-            except Exception as e:
-                st.error(f"Error chatting with agent: {e}")
+            # Get and display assistant response
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    try:
+                        response = chat_with_ka(st.session_state.messages)
+                    except Exception as e:
+                        response = f"Error: {e}"
+                st.markdown(response)
+
+        # Add assistant response to history
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
 
 # =============================================================================
