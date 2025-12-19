@@ -222,6 +222,7 @@ To evaluate your agent using the data you initialized:
 ## Project Structure
 
 *   `app/`: Streamlit application code.
-*   `src/arxiv_demo/`: Core logic for ingestion, parsing, and KIE.
+*   `arxiv_demo/`: Core logic for ingestion, parsing, KIE, and evaluation.
 *   `scripts/`: Utility scripts for data setup and maintenance.
+*   `Runbook.ipynb`: Interactive notebook for setup and running in Databricks.
 *   `evaluation_dataset.json`: Source data for evaluation questions.
