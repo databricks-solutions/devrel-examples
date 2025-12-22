@@ -11,7 +11,7 @@ Handles the full pipeline:
 import io
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 
 import arxiv
@@ -38,9 +38,6 @@ class PaperMetadata:
     categories: list[str]
     pdf_url: str
     volume_path: str | None = None
-
-    def to_dict(self) -> dict:
-        return asdict(self)
 
 
 @dataclass
@@ -72,17 +69,6 @@ class ExtractedPaper:
     methodology: str
     limitations: list[str]
     topics: list[str]
-
-    def to_dict(self) -> dict:
-        return {
-            "title": self.title,
-            "authors": self.authors,
-            "affiliation": self.affiliation,
-            "contributions": self.contributions,
-            "methodology": self.methodology,
-            "limitations": self.limitations,
-            "topics": self.topics,
-        }
 
 
 # =============================================================================
@@ -175,25 +161,18 @@ class ArxivIngestion:
 
     def list_uploaded_files(self) -> list[str]:
         """List files in the UC Volume."""
-        try:
-            files = self.client.files.list_directory_contents(self.config.volume_path)
-            return [f.path for f in files]
-        except Exception:
-            return []
+        files = self.client.files.list_directory_contents(self.config.volume_path)
+        return [f.path for f in files]
 
-    def delete_file(self, volume_path: str) -> bool:
+    def delete_file(self, volume_path: str) -> None:
         """Delete a file from the UC Volume."""
-        try:
-            self.client.files.delete(volume_path)
-            return True
-        except Exception:
-            return False
+        self.client.files.delete(volume_path)
 
-    def save_paper_metadata(self, paper: PaperMetadata) -> bool:
+    def save_paper_metadata(self, paper: PaperMetadata) -> None:
         """Save paper metadata to the papers Delta table."""
         title_escaped = paper.title.replace("'", "''")
         abstract_escaped = paper.abstract.replace("'", "''")
-        authors_sql = ", ".join([f"'{a.replace(chr(39), chr(39)+chr(39))}'" for a in paper.authors])
+        authors_sql = ", ".join([f"'{a.replace(\"'\", \"''\")}'" for a in paper.authors])
         categories_sql = ", ".join([f"'{c}'" for c in paper.categories])
 
         delete_sql = f"DELETE FROM {self.config.full_schema}.papers WHERE arxiv_id = '{paper.arxiv_id}'"
@@ -209,16 +188,12 @@ class ArxivIngestion:
         )
         """
 
-        try:
-            self.client.statement_execution.execute_statement(
-                warehouse_id=self.config.warehouse_id, statement=delete_sql, wait_timeout="30s"
-            )
-            self.client.statement_execution.execute_statement(
-                warehouse_id=self.config.warehouse_id, statement=insert_sql, wait_timeout="30s"
-            )
-            return True
-        except Exception:
-            return False
+        self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=delete_sql, wait_timeout="30s"
+        )
+        self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=insert_sql, wait_timeout="30s"
+        )
 
     def get_all_papers(self) -> list[dict]:
         """Get all papers from the papers Delta table."""
@@ -226,29 +201,23 @@ class ArxivIngestion:
         SELECT arxiv_id, title, authors, abstract, published_date, categories, pdf_url, volume_path
         FROM {self.config.full_schema}.papers ORDER BY published_date DESC
         """
-        try:
-            response = self.client.statement_execution.execute_statement(
-                warehouse_id=self.config.warehouse_id, statement=sql, wait_timeout="30s"
-            )
-            if not response.result or not response.result.data_array:
-                return []
-            columns = [col.name for col in response.manifest.schema.columns]
-            return [{columns[i]: row[i] for i in range(len(columns))} for row in response.result.data_array]
-        except Exception:
+        response = self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=sql, wait_timeout="30s"
+        )
+        if not response.result or not response.result.data_array:
             return []
+        columns = [col.name for col in response.manifest.schema.columns]
+        return [{columns[i]: row[i] for i in range(len(columns))} for row in response.result.data_array]
 
-    def delete_paper(self, arxiv_id: str) -> bool:
+    def delete_paper(self, arxiv_id: str) -> None:
         """Delete a paper from both the volume and the papers table."""
         sql = f"DELETE FROM {self.config.full_schema}.papers WHERE arxiv_id = '{arxiv_id}'"
-        try:
-            self.client.statement_execution.execute_statement(
-                warehouse_id=self.config.warehouse_id, statement=sql, wait_timeout="30s"
-            )
-        except Exception:
-            pass
+        self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=sql, wait_timeout="30s"
+        )
         filename = f"{arxiv_id.replace('/', '_')}.pdf"
         volume_path = f"{self.config.volume_path}/{filename}"
-        return self.delete_file(volume_path)
+        self.delete_file(volume_path)
 
 
 # =============================================================================
@@ -305,6 +274,28 @@ class DocumentParser:
             elements=elements,
             has_tables=any(e.get("type") == "table" for e in elements),
             has_figures=any(e.get("type") == "figure" for e in elements),
+        )
+
+    def save_parsed_document(self, doc: ParsedDocument) -> None:
+        """Save parsed document to the parsed_documents table."""
+        content_escaped = doc.text_content.replace("'", "''")
+
+        delete_sql = f"DELETE FROM {self.config.full_schema}.parsed_documents WHERE arxiv_id = '{doc.arxiv_id}'"
+        insert_sql = f"""
+        INSERT INTO {self.config.full_schema}.parsed_documents (
+            arxiv_id, parsed_content, page_count, element_count,
+            has_tables, has_figures, parsed_at
+        ) VALUES (
+            '{doc.arxiv_id}', '{content_escaped}', {doc.page_count}, {len(doc.elements)},
+            {str(doc.has_tables).upper()}, {str(doc.has_figures).upper()}, CURRENT_TIMESTAMP()
+        )
+        """
+
+        self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=delete_sql, wait_timeout="30s"
+        )
+        self.client.statement_execution.execute_statement(
+            warehouse_id=self.config.warehouse_id, statement=insert_sql, wait_timeout="30s"
         )
 
 
