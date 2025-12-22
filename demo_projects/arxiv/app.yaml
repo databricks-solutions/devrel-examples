@@ -2,14 +2,30 @@ command:
   - streamlit
   - run
   - app/main.py
+  - --server.port
+  - "8000"
+  - --server.address
+  - "0.0.0.0"
 env:
+  # PYTHONPATH - include source directory for local package imports
+  - name: PYTHONPATH
+    value: /app/python/source_code
+  # Auth - automatically set by Databricks Apps runtime
   - name: DATABRICKS_HOST
     valueFrom: host
-  - name: DATABRICKS_TOKEN
-    valueFrom: token
+  # Unity Catalog resources (update these for your environment)
   - name: ARXIV_CATALOG
     value: arxiv_demo
   - name: ARXIV_SCHEMA
     value: main
   - name: ARXIV_VOLUME
     value: pdfs
+  # SQL Warehouse for ai_parse_document
+  # Get your warehouse ID from: Databricks > SQL Warehouses > (select) > Connection Details
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: REPLACE_WITH_YOUR_WAREHOUSE_ID
+  # Agent endpoints (get these from Databricks Agents UI after deploying your agents)
+  - name: KIE_ENDPOINT
+    value: REPLACE_WITH_YOUR_KIE_ENDPOINT
+  - name: KA_ENDPOINT
+    value: REPLACE_WITH_YOUR_KA_ENDPOINT

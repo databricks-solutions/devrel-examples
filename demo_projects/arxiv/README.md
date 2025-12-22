@@ -83,7 +83,7 @@ Before running the app, you need to create two agents in Databricks: a **Knowled
 1.  Navigate to **Agents** > **Create Agent**.
 2.  Select **Pattern**: "Key Information Extraction" (or similar Agent Brick).
 3.  Name it: `arxiv-kie`.
-    *   Use the following JSON Schema:
+4.  Use the following JSON Schema:
     ```json
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -147,6 +147,19 @@ Before running the app, you need to create two agents in Databricks: a **Knowled
 5.  Deploy the agent and copy the **Serving Endpoint Name**.
 6.  Set `KIE_ENDPOINT=agents_arxiv-kie` in your `.env`.
 
+### Finding Endpoint Names
+
+After deploying your agents, you can find the endpoint names in several ways:
+
+1. **Agents UI**: Go to **Machine Learning** > **Agents** > select your agent > look for "Serving Endpoint" in the details panel
+2. **Serving Endpoints UI**: Go to **Machine Learning** > **Serving** > find your agent's endpoint (typically prefixed with `agents_`)
+3. **CLI**: Run `databricks serving-endpoints list` and look for endpoints matching your agent names
+
+The endpoint names are used in:
+- `.env` file for local development (`KA_ENDPOINT`, `KIE_ENDPOINT`)
+- `app.yaml` for Databricks Apps deployment
+- `databricks.yml` variables for DAB-based deployment
+
 ## Initialization
 
 Before running the app or evaluation, you need to populate your Unity Catalog Volume and Tables.
@@ -169,38 +182,34 @@ uv run python scripts/create_eval_table.py
 
 ## Running the App
 
-### Option 1: Local Execution
-Run the Streamlit app locally:
+There are three ways to run this application:
+
+| Method | Best For | Requirements |
+|--------|----------|--------------|
+| **Local Execution** | Development & testing | Local Python environment, Databricks CLI profile |
+| **Databricks Apps (DAB)** | Production deployment | Databricks CLI, DAB bundles |
+| **Runbook** | Interactive setup & learning | Databricks notebook environment |
+
+---
+
+### Method 1: Local Execution
+
+Run the Streamlit app locally for development:
+
 ```bash
+# Ensure .env is configured with your endpoints
 uv run streamlit run app/main.py
 ```
 
-### Option 2: Run on Databricks
-You can run this project directly in a Databricks Notebook or Web Terminal.
+Requirements:
+- `.env` file with `DATABRICKS_PROFILE`, `KA_ENDPOINT`, `KIE_ENDPOINT`, `DATABRICKS_WAREHOUSE_ID`
+- Databricks CLI profile configured
 
-**Method A: Databricks Runbook (Recommended)**
-Import the notebook at `Runbook.ipynb` into your workspace. It guides you through the entire setup, ingestion, agent creation, and app execution interactively.
+---
 
-**Method B: Web Terminal**:
-1.  Clone the repo into Databricks.
-2.  Open a Web Terminal.
-3.  Install dependencies: `pip install -r requirements.txt` (or install manually).
-4.  Run: `streamlit run app/main.py`.
+### Method 2: Databricks Apps Deployment (DAB)
 
-**Method C: Custom Notebook**:
-1.  Create a notebook in the `app` directory.
-2.  Run the app inline:
-    ```python
-    from streamlit.web.cli import main
-    import sys
-    sys.argv = ["streamlit", "run", "app/main.py"]
-    main()
-    ```
-    *Note: Streamlit inside notebooks has varying support depending on the runtime version.*
-
-## Databricks Apps Deployment
-
-Deploy this app as a [Databricks App](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) for production use.
+Deploy as a [Databricks App](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) for production use. This method uses Databricks Asset Bundles (DAB) for declarative deployment with automatic permission management.
 
 ### How Authentication Works
 
@@ -264,10 +273,28 @@ env:
     value: <your-ka-endpoint-name>
 ```
 
-**`databricks.yml`** - DAB bundle configuration:
+**`databricks.yml`** - DAB bundle configuration with variables and resources:
 ```yaml
 bundle:
   name: arxiv-demo
+
+# User-configurable variables (update these for your environment)
+variables:
+  ka_endpoint:
+    description: "Knowledge Assistant serving endpoint name"
+    default: "REPLACE_WITH_YOUR_KA_ENDPOINT"
+  kie_endpoint:
+    description: "KIE Agent serving endpoint name"
+    default: "REPLACE_WITH_YOUR_KIE_ENDPOINT"
+  warehouse_id:
+    description: "SQL Warehouse ID"
+    default: "REPLACE_WITH_YOUR_WAREHOUSE_ID"
+  catalog:
+    default: "arxiv_demo"
+  schema:
+    default: "main"
+  volume:
+    default: "pdfs"
 
 resources:
   apps:
@@ -275,92 +302,101 @@ resources:
       name: arxiv-app
       description: "Arxiv Knowledge Assistant Curator App"
       source_code_path: .
+      # App resources - permissions automatically granted to app's service principal
+      resources:
+        - name: "ka-endpoint"
+          serving_endpoint:
+            name: ${var.ka_endpoint}
+            permission: "CAN_QUERY"
+        - name: "kie-endpoint"
+          serving_endpoint:
+            name: ${var.kie_endpoint}
+            permission: "CAN_QUERY"
+        - name: "sql-warehouse"
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: "CAN_USE"
+        - name: "pdfs-volume"
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.${var.volume}
+            securable_type: VOLUME
+            permission: WRITE_VOLUME
 
 targets:
   dev:
     mode: development
     default: true
     workspace:
-      profile: <your-profile>
+      profile: default  # Change to your CLI profile
 ```
 
-### Grant Service Principal Permissions
+### How Resources Work
 
-After deployment, the app's service principal needs permissions to access resources. Run this Python script to grant them programmatically:
+When you declare resources in `databricks.yml`, Databricks automatically:
 
-```python
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import (
-    ServingEndpointAccessControlRequest,
-    ServingEndpointPermissionLevel
-)
-from databricks.sdk.service.sql import (
-    WarehouseAccessControlRequest,
-    WarehousePermissionLevel
-)
+1. Creates a service principal for your app
+2. Grants the specified permissions to that service principal
+3. Makes resource metadata available via `valueFrom` in `app.yaml` (optional)
 
-w = WorkspaceClient(profile='<your-profile>')
+**No manual permission scripts needed!** The bundle handles everything during `databricks bundle deploy`.
 
-# Get the service principal ID from the app (visible in Databricks Apps UI)
-sp_id = '<app-service-principal-id>'  # e.g., '9aecd2a5-df62-4cd1-be6e-0bf784e4bde3'
-
-# 1. Grant CAN_QUERY on serving endpoints
-ka_endpoint_id = '<ka-endpoint-guid>'   # Get from: databricks serving-endpoints list
-kie_endpoint_id = '<kie-endpoint-guid>'
-
-for endpoint_id in [ka_endpoint_id, kie_endpoint_id]:
-    w.serving_endpoints.update_permissions(
-        serving_endpoint_id=endpoint_id,
-        access_control_list=[
-            ServingEndpointAccessControlRequest(
-                service_principal_name=sp_id,
-                permission_level=ServingEndpointPermissionLevel.CAN_QUERY
-            )
-        ]
-    )
-
-# 2. Grant CAN_USE on SQL Warehouse
-warehouse_id = '<your-warehouse-id>'
-w.warehouses.update_permissions(
-    warehouse_id=warehouse_id,
-    access_control_list=[
-        WarehouseAccessControlRequest(
-            service_principal_name=sp_id,
-            permission_level=WarehousePermissionLevel.CAN_USE
-        )
-    ]
-)
-
-# 3. Grant Unity Catalog permissions
-stmts = [
-    f"GRANT USE CATALOG ON CATALOG arxiv_demo TO `{sp_id}`",
-    f"GRANT USE SCHEMA ON SCHEMA arxiv_demo.main TO `{sp_id}`",
-    f"GRANT READ VOLUME, WRITE VOLUME ON VOLUME arxiv_demo.main.pdfs TO `{sp_id}`"
-]
-for stmt in stmts:
-    w.statement_execution.execute_statement(
-        warehouse_id=warehouse_id,
-        statement=stmt,
-        wait_timeout='30s'
-    )
-
-print("Permissions granted!")
-```
+Available resource types:
+- `serving_endpoint`: Model serving endpoints (permission: `CAN_QUERY` or `CAN_MANAGE`)
+- `sql_warehouse`: SQL warehouses (permission: `CAN_USE` or `CAN_MANAGE`)
+- `uc_securable`: Unity Catalog objects like volumes (permission: `READ_VOLUME` or `WRITE_VOLUME`)
 
 ### Deploy the App
+
+**Step 1: Configure your settings**
+
+Edit `databricks.yml` and `app.yaml` with your endpoint names and warehouse ID:
+- `ka_endpoint`: Your Knowledge Assistant endpoint (e.g., `agents_arxiv-papers`)
+- `kie_endpoint`: Your KIE Agent endpoint (e.g., `agents_arxiv-kie`)
+- `warehouse_id`: Your SQL Warehouse ID (from SQL Warehouses > Connection Details)
+
+**Step 2: Authenticate and deploy**
 
 ```bash
 # Authenticate with the Databricks CLI
 databricks auth login --profile <your-profile>
 
-# Deploy the bundle
+# Deploy the bundle (uses defaults from databricks.yml)
 databricks bundle deploy --profile <your-profile>
+
+# Or override variables at deploy time:
+databricks bundle deploy --profile <your-profile> \
+  --var ka_endpoint=agents_arxiv-papers \
+  --var kie_endpoint=agents_arxiv-kie \
+  --var warehouse_id=abc123def456
+
+# Start the app
+databricks apps start arxiv-app --profile <your-profile>
 
 # Check app status
 databricks apps get arxiv-app --profile <your-profile>
 ```
 
 The app URL will be displayed in the output (e.g., `https://arxiv-app-xxxxx.aws.databricksapps.com`).
+
+---
+
+### Method 3: Runbook Deployment
+
+The `Runbook.ipynb` notebook provides an interactive, step-by-step approach to setting up and deploying the app directly from Databricks.
+
+**What the Runbook provides:**
+1. Interactive widgets for configuring endpoint names and warehouse IDs
+2. Guided setup of Unity Catalog resources (catalog, schema, volume, tables)
+3. Paper ingestion and agent creation instructions
+4. App deployment with automatic configuration updates
+
+**To use the Runbook:**
+1. Import `Runbook.ipynb` into your Databricks workspace
+2. Attach to a cluster with the Databricks CLI installed
+3. Run through each section, filling in widgets as prompted
+4. The Runbook will update `app.yaml` and `databricks.yml` with your settings before deployment
+
+This method is recommended for first-time setup or learning, as it provides context and verification at each step.
 
 ### Dual-Mode Authentication (Local + Deployed)
 
@@ -401,8 +437,20 @@ To evaluate your agent using the data you initialized:
 
 ## Project Structure
 
-*   `app/`: Streamlit application code.
-*   `arxiv_demo/`: Core logic for ingestion, parsing, KIE, and evaluation.
-*   `scripts/`: Utility scripts for data setup and maintenance.
-*   `Runbook.ipynb`: Interactive notebook for setup and running in Databricks.
-*   `evaluation_dataset.json`: Source data for evaluation questions.
+```
+arxiv/
+├── app/                    # Streamlit application
+│   └── main.py             # Main app entry point
+├── arxiv_demo/             # Core library
+│   ├── config.py           # Configuration management
+│   ├── ingestion.py        # Arxiv search, download, parsing, KIE
+│   └── knowledge_assistant.py  # KA client for chat
+├── scripts/                # Setup utilities
+│   ├── ingest_golden_set.py    # Download curated papers
+│   └── create_eval_table.py    # Create evaluation dataset
+├── app.yaml                # Databricks Apps runtime config
+├── databricks.yml          # DAB bundle configuration
+├── Runbook.ipynb           # Interactive setup notebook
+├── evaluation_dataset.json # Source evaluation questions
+└── .env.example            # Environment template
+```

@@ -327,20 +327,28 @@ class KIEClient:
         return self._client
 
     def extract_from_text(self, text_content: str, arxiv_id: str = "") -> ExtractedPaper:
-        """Extract structured fields from parsed text content."""
+        """Extract structured fields from parsed text content.
+
+        Uses the OpenAI-compatible client for Agent Brick endpoints,
+        which handles OAuth token exchange automatically for both
+        local development and Databricks Apps deployment.
+        """
         text = text_content[:50000] if len(text_content) > 50000 else text_content
 
-        response = self.client.serving_endpoints.query(
-            name=self.endpoint_name,
+        # Use OpenAI-compatible client for Agent Brick endpoints
+        openai_client = self.client.serving_endpoints.get_open_ai_client()
+
+        response = openai_client.chat.completions.create(
+            model=self.endpoint_name,
             messages=[
-                ChatMessage(
-                    role=ChatMessageRole.USER,
-                    content=f"Extract information from this research paper:\n\n{text}",
-                )
+                {
+                    "role": "user",
+                    "content": f"Extract information from this research paper:\n\n{text}",
+                }
             ],
         )
 
-        if hasattr(response, "choices") and response.choices:
+        if response.choices and response.choices[0].message:
             content = response.choices[0].message.content
             try:
                 data = json.loads(content)
