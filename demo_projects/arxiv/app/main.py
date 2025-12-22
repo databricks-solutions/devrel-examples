@@ -14,8 +14,8 @@ import streamlit as st
 from openai import OpenAI
 from databricks.sdk import WorkspaceClient
 
-from arxiv_demo.config import DEFAULT_CONFIG
-from arxiv_demo.ingestion import ArxivIngestion, DocumentParser, KIEClient
+from src.config import DEFAULT_CONFIG
+from src.ingestion import ArxivIngestion, DocumentParser, KIEClient
 
 # Get KA endpoint from config
 KA_ENDPOINT = DEFAULT_CONFIG.ka_endpoint

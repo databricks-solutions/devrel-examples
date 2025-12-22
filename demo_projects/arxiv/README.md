@@ -63,7 +63,7 @@ If running this code on a Databricks cluster (e.g. via Web Terminal or Notebook)
     # DATABRICKS_TOKEN=<your-pat-token>
     
     # Optional overrides
-    ARXIV_CATALOG=arxiv_demo
+    ARXIV_CATALOG=src
     ARXIV_SCHEMA=main
     ARXIV_VOLUME=pdfs
     ```
@@ -74,7 +74,7 @@ Before running the app, you need to create two agents in Databricks: a **Knowled
 
 ### 1. Create Knowledge Assistant
 1.  Navigate to **Agents** > **Create Agent**.
-2.  Select **Knowledge Source**: Unity Catalog Volume (`arxiv_demo.main.pdfs`).
+2.  Select **Knowledge Source**: Unity Catalog Volume (`src.main.pdfs`).
 3.  Name it: `arxiv-papers`.
 4.  Deploy the agent and copy the **Serving Endpoint Name** (e.g., `agents_arxiv-papers`).
 5.  Set `KA_ENDPOINT=agents_arxiv-papers` in your `.env`.
@@ -170,7 +170,7 @@ Download a curated set of seminal LLM Agent papers (ReAct, Reflexion, Voyager, e
 ```bash
 uv run python scripts/ingest_golden_set.py
 ```
-*This uploads PDFs to `/Volumes/arxiv_demo/main/pdfs/`.*
+*This uploads PDFs to `/Volumes/src/main/pdfs/`.*
 
 ### 2. Create Evaluation Dataset
 Create the Unity Catalog table required for the Knowledge Assistant Evaluation UI.
@@ -178,7 +178,7 @@ Create the Unity Catalog table required for the Knowledge Assistant Evaluation U
 ```bash
 uv run python scripts/create_eval_table.py
 ```
-*Creates `arxiv_demo.main.eval_questions` populated with 5 evaluation questions matching the golden set papers.*
+*Creates `src.main.eval_questions` populated with 5 evaluation questions matching the golden set papers.*
 
 ## Running the App
 
@@ -229,9 +229,9 @@ Before deploying, ensure you have:
 
 1. **Databricks CLI** configured with your workspace profile
 2. **Unity Catalog resources** created:
-   - Catalog: `arxiv_demo`
-   - Schema: `arxiv_demo.main`
-   - Volume: `arxiv_demo.main.pdfs`
+   - Catalog: `src`
+   - Schema: `src.main`
+   - Volume: `src.main.pdfs`
 3. **Agents deployed** with serving endpoints:
    - Knowledge Assistant endpoint (e.g., `ka-xxxxx-endpoint`)
    - KIE Agent endpoint (e.g., `kie-xxxxx-endpoint`)
@@ -258,7 +258,7 @@ env:
     valueFrom: host
   # Unity Catalog resources
   - name: ARXIV_CATALOG
-    value: arxiv_demo
+    value: src
   - name: ARXIV_SCHEMA
     value: main
   - name: ARXIV_VOLUME
@@ -290,7 +290,7 @@ variables:
     description: "SQL Warehouse ID"
     default: "REPLACE_WITH_YOUR_WAREHOUSE_ID"
   catalog:
-    default: "arxiv_demo"
+    default: "src"
   schema:
     default: "main"
   volume:
@@ -298,8 +298,8 @@ variables:
 
 resources:
   apps:
-    arxiv-app:
-      name: arxiv-app
+    arxiv-curator:
+      name: arxiv-curator
       description: "Arxiv Knowledge Assistant Curator App"
       source_code_path: .
       # App resources - permissions automatically granted to app's service principal
@@ -370,13 +370,13 @@ databricks bundle deploy --profile <your-profile> \
   --var warehouse_id=abc123def456
 
 # Start the app
-databricks apps start arxiv-app --profile <your-profile>
+databricks apps start arxiv-curator --profile <your-profile>
 
 # Check app status
-databricks apps get arxiv-app --profile <your-profile>
+databricks apps get arxiv-curator --profile <your-profile>
 ```
 
-The app URL will be displayed in the output (e.g., `https://arxiv-app-xxxxx.aws.databricksapps.com`).
+The app URL will be displayed in the output (e.g., `https://arxiv-curator-xxxxx.aws.databricksapps.com`).
 
 ---
 
@@ -404,7 +404,7 @@ The app supports both local development and Databricks Apps deployment:
 
 ```python
 from databricks.sdk import WorkspaceClient
-from arxiv_demo.config import DEFAULT_CONFIG
+from src.config import DEFAULT_CONFIG
 
 # Works in both environments:
 # - Local: Uses profile from DATABRICKS_PROFILE env var
@@ -423,14 +423,14 @@ To evaluate your agent using the data you initialized:
 
 1.  **Create a Knowledge Assistant**:
     *   In Databricks, go to **Agents** > **Create Agent**.
-    *   Select **Knowledge Source**: Unity Catalog Volume (`arxiv_demo.main.pdfs`).
+    *   Select **Knowledge Source**: Unity Catalog Volume (`src.main.pdfs`).
     *   Name it (e.g., `arxiv-agent`).
     *   Deploy the agent.
 
 2.  **Run Evaluation**:
     *   Go to the **Evaluation** tab in your agent's page (or the dedicated Evaluation UI).
     *   Click **Import** > **Unity Catalog Table**.
-    *   Select `arxiv_demo.main.eval_questions`.
+    *   Select `src.main.eval_questions`.
     *   Map the columns (Eval ID, Request, Guidelines, etc.).
     *   Run the evaluation.
     *   Review the scores and "LLM as a Judge" feedback.
@@ -441,7 +441,7 @@ To evaluate your agent using the data you initialized:
 arxiv/
 ├── app/                    # Streamlit application
 │   └── main.py             # Main app entry point
-├── arxiv_demo/             # Core library
+├── src/             # Core library
 │   ├── config.py           # Configuration management
 │   ├── ingestion.py        # Arxiv search, download, parsing, KIE
 │   └── knowledge_assistant.py  # KA client for chat

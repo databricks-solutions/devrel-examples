@@ -2,7 +2,7 @@
 Evaluation script for Arxiv Knowledge Assistant.
 
 Usage:
-    python -m arxiv_demo.eval --endpoint-name agents_arxiv-papers --judge-endpoint databricks-meta-llama-3-1-70b-instruct
+    python -m src.eval --endpoint-name agents_arxiv-papers --judge-endpoint databricks-meta-llama-3-1-70b-instruct
 """
 
 import argparse

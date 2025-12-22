@@ -24,8 +24,8 @@ variables:
 
 resources:
   apps:
-    arxiv-app:
-      name: arxiv-app
+    arxiv-curator:
+      name: arxiv-curator
       description: "Arxiv Knowledge Assistant Curator App"
       source_code_path: .
       # App resources - permissions automatically granted to app's service principal

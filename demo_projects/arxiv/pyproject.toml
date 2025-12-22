@@ -18,7 +18,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["arxiv_demo"]
+packages = ["src"]
 
 [tool.ruff]
 line-length = 100
