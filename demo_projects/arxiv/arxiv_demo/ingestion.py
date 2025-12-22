@@ -172,7 +172,8 @@ class ArxivIngestion:
         """Save paper metadata to the papers Delta table."""
         title_escaped = paper.title.replace("'", "''")
         abstract_escaped = paper.abstract.replace("'", "''")
-        authors_sql = ", ".join([f"'{a.replace(\"'\", \"''\")}'" for a in paper.authors])
+        escape = lambda s: s.replace("'", "''")
+        authors_sql = ", ".join([f"'{escape(a)}'" for a in paper.authors])
         categories_sql = ", ".join([f"'{c}'" for c in paper.categories])
 
         delete_sql = f"DELETE FROM {self.config.full_schema}.papers WHERE arxiv_id = '{paper.arxiv_id}'"
