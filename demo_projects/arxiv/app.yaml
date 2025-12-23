@@ -10,12 +10,11 @@ env:
   # PYTHONPATH - include source directory for local package imports
   - name: PYTHONPATH
     value: /app/python/source_code
-  # Auth - automatically set by Databricks Apps runtime
-  - name: DATABRICKS_HOST
-    valueFrom: host
+  # Note: DATABRICKS_HOST, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
+  # are automatically injected by Databricks Apps runtime
   # Unity Catalog resources (update these for your environment)
   - name: ARXIV_CATALOG
-    value: src
+    value: arxiv_demo
   - name: ARXIV_SCHEMA
     value: main
   - name: ARXIV_VOLUME

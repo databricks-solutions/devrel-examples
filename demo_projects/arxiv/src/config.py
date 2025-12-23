@@ -29,7 +29,7 @@ class DatabricksConfig:
     """Databricks resource configuration."""
 
     # Unity Catalog
-    catalog: str = field(default_factory=lambda: _get_env("ARXIV_CATALOG", "src"))
+    catalog: str = field(default_factory=lambda: _get_env("ARXIV_CATALOG", "arxiv_demo"))
     schema: str = field(default_factory=lambda: _get_env("ARXIV_SCHEMA", "main"))
     volume: str = field(default_factory=lambda: _get_env("ARXIV_VOLUME", "pdfs"))
 

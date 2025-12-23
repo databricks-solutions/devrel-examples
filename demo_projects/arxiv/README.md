@@ -76,8 +76,8 @@ Before running the app, you need to create two agents in Databricks: a **Knowled
 1.  Navigate to **Agents** > **Create Agent**.
 2.  Select **Knowledge Source**: Unity Catalog Volume (`src.main.pdfs`).
 3.  Name it: `arxiv-papers`.
-4.  Deploy the agent and copy the **Serving Endpoint Name** (e.g., `agents_arxiv-papers`).
-5.  Set `KA_ENDPOINT=agents_arxiv-papers` in your `.env`.
+4.  Deploy the agent and copy the **Serving Endpoint Name** (e.g., `ka-a82d6652-endpoint`).
+5.  Set `KA_ENDPOINT=<your-endpoint>` in your `.env`.
 
 ### 2. Create KIE Agent (Agent Bricks)
 1.  Navigate to **Agents** > **Create Agent**.
@@ -144,41 +144,31 @@ Before running the app, you need to create two agents in Databricks: a **Knowled
       ]
     }
     ```
-5.  Deploy the agent and copy the **Serving Endpoint Name**.
-6.  Set `KIE_ENDPOINT=agents_arxiv-kie` in your `.env`.
+5.  Deploy the agent and copy the **Serving Endpoint Name** (e.g., `kie-a82d6652-endpoint`).
+6.  Set `KIE_ENDPOINT=<your-endpoint>` in your `.env`.
 
 ### Finding Endpoint Names
 
-After deploying your agents, you can find the endpoint names in several ways:
+After deploying your agents, find the endpoint names:
 
-1. **Agents UI**: Go to **Machine Learning** > **Agents** > select your agent > look for "Serving Endpoint" in the details panel
-2. **Serving Endpoints UI**: Go to **Machine Learning** > **Serving** > find your agent's endpoint (typically prefixed with `agents_`)
-3. **CLI**: Run `databricks serving-endpoints list` and look for endpoints matching your agent names
+1. **Serving UI**: Go to **Machine Learning** > **Serving** > find your agent's endpoint
+2. Endpoint names follow the format `ka-xxxxxxxx-endpoint` or `kie-xxxxxxxx-endpoint`
 
 The endpoint names are used in:
 - `.env` file for local development (`KA_ENDPOINT`, `KIE_ENDPOINT`)
 - `app.yaml` for Databricks Apps deployment
-- `databricks.yml` variables for DAB-based deployment
+- Runbook widgets for notebook-based deployment
 
 ## Initialization
 
-Before running the app or evaluation, you need to populate your Unity Catalog Volume and Tables.
+Before running the app, you need to populate your Unity Catalog Volume and Tables. The **Runbook** (`Runbook.ipynb`) handles all initialization steps interactively:
 
-### 1. Ingest Golden Set Papers
-Download a curated set of seminal LLM Agent papers (ReAct, Reflexion, Voyager, etc.) to use as the base knowledge.
+1. **Create Unity Catalog resources** (catalog, schema, volume, tables)
+2. **Ingest golden set papers** (ReAct, Reflexion, Voyager, etc.)
+3. **Parse papers** with `ai_parse_document`
+4. **Create evaluation dataset** for the KA Evaluation UI
 
-```bash
-uv run python scripts/ingest_golden_set.py
-```
-*This uploads PDFs to `/Volumes/src/main/pdfs/`.*
-
-### 2. Create Evaluation Dataset
-Create the Unity Catalog table required for the Knowledge Assistant Evaluation UI.
-
-```bash
-uv run python scripts/create_eval_table.py
-```
-*Creates `src.main.eval_questions` populated with 5 evaluation questions matching the golden set papers.*
+See [Method 3: Runbook Deployment](#method-3-runbook-deployment) for the recommended setup flow.
 
 ## Running the App
 
@@ -186,9 +176,9 @@ There are three ways to run this application:
 
 | Method | Best For | Requirements |
 |--------|----------|--------------|
+| **Runbook (Recommended)** | First-time setup, end-to-end flow | Databricks notebook environment |
 | **Local Execution** | Development & testing | Local Python environment, Databricks CLI profile |
-| **Databricks Apps (DAB)** | Production deployment | Databricks CLI, DAB bundles |
-| **Runbook** | Interactive setup & learning | Databricks notebook environment |
+| **Databricks Apps (DAB CLI)** | CI/CD deployment | Databricks CLI |
 
 ---
 
@@ -290,7 +280,7 @@ variables:
     description: "SQL Warehouse ID"
     default: "REPLACE_WITH_YOUR_WAREHOUSE_ID"
   catalog:
-    default: "src"
+    default: "arxiv_demo"
   schema:
     default: "main"
   volume:
@@ -343,15 +333,17 @@ When you declare resources in `databricks.yml`, Databricks automatically:
 Available resource types:
 - `serving_endpoint`: Model serving endpoints (permission: `CAN_QUERY` or `CAN_MANAGE`)
 - `sql_warehouse`: SQL warehouses (permission: `CAN_USE` or `CAN_MANAGE`)
-- `uc_securable`: Unity Catalog objects like volumes (permission: `READ_VOLUME` or `WRITE_VOLUME`)
+- `uc_securable`: Unity Catalog volumes (permission: `READ_VOLUME` or `WRITE_VOLUME`)
+
+**Note:** Table permissions (e.g., SELECT on `papers`) must be granted via SQL. The Runbook handles this automatically using the app's `service_principal_client_id`.
 
 ### Deploy the App
 
 **Step 1: Configure your settings**
 
 Edit `databricks.yml` and `app.yaml` with your endpoint names and warehouse ID:
-- `ka_endpoint`: Your Knowledge Assistant endpoint (e.g., `agents_arxiv-papers`)
-- `kie_endpoint`: Your KIE Agent endpoint (e.g., `agents_arxiv-kie`)
+- `ka_endpoint`: Your Knowledge Assistant endpoint (e.g., `ka-a82d6652-endpoint`)
+- `kie_endpoint`: Your KIE Agent endpoint (e.g., `kie-a82d6652-endpoint`)
 - `warehouse_id`: Your SQL Warehouse ID (from SQL Warehouses > Connection Details)
 
 **Step 2: Authenticate and deploy**
@@ -365,8 +357,8 @@ databricks bundle deploy --profile <your-profile>
 
 # Or override variables at deploy time:
 databricks bundle deploy --profile <your-profile> \
-  --var ka_endpoint=agents_arxiv-papers \
-  --var kie_endpoint=agents_arxiv-kie \
+  --var ka_endpoint=ka-xxxxxxxx-endpoint \
+  --var kie_endpoint=kie-xxxxxxxx-endpoint \
   --var warehouse_id=abc123def456
 
 # Start the app
@@ -380,23 +372,24 @@ The app URL will be displayed in the output (e.g., `https://arxiv-curator-xxxxx.
 
 ---
 
-### Method 3: Runbook Deployment
+### Method 3: Runbook Deployment (Recommended)
 
 The `Runbook.ipynb` notebook provides an interactive, step-by-step approach to setting up and deploying the app directly from Databricks.
 
 **What the Runbook provides:**
 1. Interactive widgets for configuring endpoint names and warehouse IDs
 2. Guided setup of Unity Catalog resources (catalog, schema, volume, tables)
-3. Paper ingestion and agent creation instructions
-4. App deployment with automatic configuration updates
+3. Paper ingestion with `ai_parse_document` parsing
+4. Agent creation instructions (KA and KIE)
+5. App deployment via SDK with automatic resource permissions
 
 **To use the Runbook:**
 1. Import `Runbook.ipynb` into your Databricks workspace
-2. Attach to a cluster with the Databricks CLI installed
+2. Attach to any cluster (no CLI required - uses SDK)
 3. Run through each section, filling in widgets as prompted
-4. The Runbook will update `app.yaml` and `databricks.yml` with your settings before deployment
+4. The Runbook deploys the app with declared resources, automatically granting permissions
 
-This method is recommended for first-time setup or learning, as it provides context and verification at each step.
+This method is recommended for first-time setup, as it handles everything end-to-end.
 
 ### Dual-Mode Authentication (Local + Deployed)
 
@@ -441,16 +434,13 @@ To evaluate your agent using the data you initialized:
 arxiv/
 ├── app/                    # Streamlit application
 │   └── main.py             # Main app entry point
-├── src/             # Core library
+├── src/                    # Core library
 │   ├── config.py           # Configuration management
 │   ├── ingestion.py        # Arxiv search, download, parsing, KIE
-│   └── knowledge_assistant.py  # KA client for chat
-├── scripts/                # Setup utilities
-│   ├── ingest_golden_set.py    # Download curated papers
-│   └── create_eval_table.py    # Create evaluation dataset
+│   └── eval.py             # Evaluation utilities
 ├── app.yaml                # Databricks Apps runtime config
 ├── databricks.yml          # DAB bundle configuration
-├── Runbook.ipynb           # Interactive setup notebook
+├── Runbook.ipynb           # Interactive setup notebook (recommended)
 ├── evaluation_dataset.json # Source evaluation questions
 └── .env.example            # Environment template
 ```
