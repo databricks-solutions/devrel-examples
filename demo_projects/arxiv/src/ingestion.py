@@ -220,6 +220,54 @@ class ArxivIngestion:
         volume_path = f"{self.config.volume_path}/{filename}"
         self.delete_file(volume_path)
 
+    def download_to_staging(self, paper: PaperMetadata) -> str:
+        """Download PDF from arxiv and upload to staging volume.
+
+        Returns the staging volume path. Does NOT save metadata to papers table.
+        """
+        client = arxiv.Client()
+        search = arxiv.Search(id_list=[paper.arxiv_id])
+        result = next(client.results(search))
+        result.download_pdf(dirpath=".", filename="_temp.pdf")
+
+        temp_path = Path("_temp.pdf")
+        pdf_content = temp_path.read_bytes()
+        temp_path.unlink()
+
+        filename = f"{paper.arxiv_id.replace('/', '_')}.pdf"
+        staging_path = f"{self.config.staging_volume_path}/{filename}"
+
+        self.client.files.upload(
+            file_path=staging_path,
+            contents=io.BytesIO(pdf_content),
+            overwrite=True,
+        )
+
+        return staging_path
+
+    def promote_to_ka(self, paper: PaperMetadata, staging_path: str) -> None:
+        """Copy PDF from staging to KA volume and save metadata.
+
+        This is called when user explicitly adds a paper to the Knowledge Assistant.
+        """
+        # Read from staging
+        with self.client.files.download(staging_path) as f:
+            pdf_content = f.read()
+
+        # Upload to KA volume
+        filename = f"{paper.arxiv_id.replace('/', '_')}.pdf"
+        ka_path = f"{self.config.volume_path}/{filename}"
+
+        self.client.files.upload(
+            file_path=ka_path,
+            contents=io.BytesIO(pdf_content),
+            overwrite=True,
+        )
+
+        # Update paper with KA volume path and save metadata
+        paper.volume_path = ka_path
+        self.save_paper_metadata(paper)
+
 
 # =============================================================================
 # Document Parser (ai_parse_document)

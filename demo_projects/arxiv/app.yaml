@@ -19,6 +19,8 @@ env:
     value: main
   - name: ARXIV_VOLUME
     value: pdfs
+  - name: ARXIV_STAGING_VOLUME
+    value: staging
   # SQL Warehouse for ai_parse_document
   # Get your warehouse ID from: Databricks > SQL Warehouses > (select) > Connection Details
   - name: DATABRICKS_WAREHOUSE_ID

@@ -245,36 +245,38 @@ def parse_selected_papers():
     total = len(papers_to_process)
 
     for i, paper in enumerate(papers_to_process):
-        # Step 1: Download and upload PDF
+        # Step 1: Download PDF and upload to STAGING volume (not KA volume)
         progress.progress(
             (i + 0.25) / total,
             text=f"[{i+1}/{total}] Downloading {paper.arxiv_id}...",
         )
 
         try:
-            ingestion.download_and_upload([paper], delay_seconds=1.0)
+            staging_path = ingestion.download_to_staging(paper)
         except Exception as e:
             st.error(f"Failed to download {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
+                "staging_path": None,
                 "extracted": None,
                 "status": "error",
                 "error": f"Download failed: {e}",
             }
             continue
 
-        # Step 2: Parse PDF to extract text with ai_parse_document
+        # Step 2: Parse PDF from staging volume with ai_parse_document
         progress.progress(
             (i + 0.5) / total,
             text=f"[{i+1}/{total}] Parsing PDF {paper.arxiv_id}... (1-2min)",
         )
 
         try:
-            parsed_doc = parser.parse_document(paper.volume_path, paper.arxiv_id)
+            parsed_doc = parser.parse_document(staging_path, paper.arxiv_id)
         except Exception as e:
             st.error(f"Failed to parse {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
+                "staging_path": staging_path,
                 "extracted": None,
                 "status": "error",
                 "error": f"Parse failed: {e}",
@@ -291,6 +293,7 @@ def parse_selected_papers():
             extracted = kie.extract_from_text(parsed_doc.text_content, paper.arxiv_id)
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
+                "staging_path": staging_path,
                 "extracted": extracted,
                 "status": "complete",
             }
@@ -299,6 +302,7 @@ def parse_selected_papers():
             st.error(f"KIE extraction failed for {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
+                "staging_path": staging_path,
                 "extracted": None,
                 "status": "error",
                 "error": f"KIE failed: {e}",
@@ -415,13 +419,45 @@ def review_tab():
 
 
 def add_to_knowledge_assistant():
-    """Mark selected papers as in Knowledge Assistant."""
+    """Copy selected papers from staging to KA volume."""
     selected = st.session_state.papers_for_ka
+    if not selected:
+        st.warning("No papers selected")
+        return
 
-    # The files are already in the volume from the parse step
-    # Just need to update state
-    st.success(f"Added {len(selected)} papers to Knowledge Assistant!")
-    st.info("Papers are already in the UC Volume from the parsing step.")
+    ingestion = get_ingestion()
+    progress = st.progress(0, text="Adding papers to Knowledge Assistant...")
+
+    success_count = 0
+    total = len(selected)
+
+    for i, arxiv_id in enumerate(selected):
+        data = st.session_state.parsed_papers.get(arxiv_id)
+        if not data:
+            st.error(f"No data found for {arxiv_id}")
+            continue
+
+        paper = data["paper"]
+        staging_path = data.get("staging_path")
+        if not staging_path:
+            st.error(f"No staging path for {arxiv_id}")
+            continue
+
+        progress.progress(
+            (i + 0.5) / total,
+            text=f"[{i+1}/{total}] Adding {arxiv_id} to Knowledge Assistant...",
+        )
+
+        try:
+            ingestion.promote_to_ka(paper, staging_path)
+            success_count += 1
+        except Exception as e:
+            st.error(f"Failed to add {arxiv_id}: {e}")
+
+        progress.progress((i + 1) / total, text=f"Completed {i + 1}/{total}")
+
+    progress.empty()
+    st.success(f"Added {success_count}/{total} papers to Knowledge Assistant!")
     st.info("Sync your Knowledge Assistant to pick up the new documents.")
 
     # Clear selection

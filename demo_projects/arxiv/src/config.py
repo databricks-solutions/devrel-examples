@@ -32,6 +32,7 @@ class DatabricksConfig:
     catalog: str = field(default_factory=lambda: _get_env("ARXIV_CATALOG", "arxiv_demo"))
     schema: str = field(default_factory=lambda: _get_env("ARXIV_SCHEMA", "main"))
     volume: str = field(default_factory=lambda: _get_env("ARXIV_VOLUME", "pdfs"))
+    staging_volume: str = field(default_factory=lambda: _get_env("ARXIV_STAGING_VOLUME", "staging"))
 
     # Databricks CLI profile
     profile: str | None = field(default_factory=lambda: _get_env("DATABRICKS_PROFILE"))
@@ -48,6 +49,10 @@ class DatabricksConfig:
     @property
     def volume_path(self) -> str:
         return f"/Volumes/{self.catalog}/{self.schema}/{self.volume}"
+
+    @property
+    def staging_volume_path(self) -> str:
+        return f"/Volumes/{self.catalog}/{self.schema}/{self.staging_volume}"
 
     @property
     def full_schema(self) -> str:
