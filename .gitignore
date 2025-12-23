@@ -9,3 +9,10 @@ venv/
 mlruns/
 
 _build
+
+# code assistant artifacts
+.claude
+CLAUDE.md
+dbx_ai_docs
+dbx_execution
+.dbx*

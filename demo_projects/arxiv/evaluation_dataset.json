@@ -1,0 +1,22 @@
+[
+    {
+        "question": "What are the key limitations of current LLM agents discussed in recent papers?",
+        "ground_truth": "Current LLM agents struggle with long-horizon planning, reliability in complex multi-step tasks, and can get stuck in loops. They also often lack robust error handling and self-correction mechanisms."
+    },
+    {
+        "question": "How does 'Reflexion' improve agent performance?",
+        "ground_truth": "Reflexion improves performance by adding a 'verbal reinforcement' learning step, where the agent reflects on its past mistakes and generates self-improvement hints for future trials, rather than just updating model weights."
+    },
+    {
+        "question": "Explain the concept of 'Tool Learning' in the context of agents.",
+        "ground_truth": "Tool Learning refers to the ability of agents to not just use pre-defined tools, but to learn how to use new APIs or tools from documentation or demonstrations, effectively expanding their action space dynamically."
+    },
+    {
+        "question": "What is the difference between 'ReAct' vs 'Plan-and-Solve' prompting strategies?",
+        "ground_truth": "ReAct interleaves reasoning and acting (thought -> action -> observation) at every step. Plan-and-Solve (or Plan-then-Act) generates a complete high-level plan first, then executes it, which can be better for tasks requiring global coherence but worse for dynamic environments."
+    },
+    {
+        "question": "Why is 'Context Window' a constraint for agent memory?",
+        "ground_truth": "The context window limits how much history (past observations, thoughts, actions) the agent can 'see' at once. As tasks get longer, important details fall out of context, requiring external memory systems like vector databases."
+    }
+]

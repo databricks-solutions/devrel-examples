@@ -1,0 +1,67 @@
+bundle:
+  name: arxiv-demo
+
+# Configure these variables for your environment
+variables:
+  # Agent endpoint names (from Databricks Agents UI after deployment)
+  ka_endpoint:
+    description: "Knowledge Assistant serving endpoint name"
+    default: "REPLACE_WITH_YOUR_KA_ENDPOINT"
+  kie_endpoint:
+    description: "KIE Agent serving endpoint name"
+    default: "REPLACE_WITH_YOUR_KIE_ENDPOINT"
+  # SQL Warehouse ID (for ai_parse_document)
+  warehouse_id:
+    description: "SQL Warehouse ID"
+    default: "REPLACE_WITH_YOUR_WAREHOUSE_ID"
+  # Unity Catalog settings
+  catalog:
+    default: "arxiv_demo"
+  schema:
+    default: "main"
+  volume:
+    default: "pdfs"
+  staging_volume:
+    default: "staging"
+
+resources:
+  apps:
+    arxiv-curator:
+      name: arxiv-curator
+      description: "Arxiv Knowledge Assistant Curator App"
+      source_code_path: .
+      # App resources - permissions automatically granted to app's service principal
+      resources:
+        - name: "ka-endpoint"
+          serving_endpoint:
+            name: ${var.ka_endpoint}
+            permission: "CAN_QUERY"
+
+        - name: "kie-endpoint"
+          serving_endpoint:
+            name: ${var.kie_endpoint}
+            permission: "CAN_QUERY"
+
+        - name: "sql-warehouse"
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: "CAN_USE"
+
+        - name: "pdfs-volume"
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.${var.volume}
+            securable_type: VOLUME
+            permission: WRITE_VOLUME
+
+        - name: "staging-volume"
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.${var.staging_volume}
+            securable_type: VOLUME
+            permission: WRITE_VOLUME
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      profile: default  # Change to your CLI profile
