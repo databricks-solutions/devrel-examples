@@ -251,8 +251,8 @@ class ArxivIngestion:
         This is called when user explicitly adds a paper to the Knowledge Assistant.
         """
         # Read from staging
-        with self.client.files.download(staging_path) as f:
-            pdf_content = f.read()
+        response = self.client.files.download(staging_path)
+        pdf_content = response.contents.read()
 
         # Upload to KA volume
         filename = f"{paper.arxiv_id.replace('/', '_')}.pdf"
