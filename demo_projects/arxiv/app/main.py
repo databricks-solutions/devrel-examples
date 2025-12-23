@@ -252,12 +252,12 @@ def parse_selected_papers():
         )
 
         try:
-            staging_path = ingestion.download_to_staging(paper)
+            staging_path, pdf_bytes = ingestion.download_to_staging(paper)
         except Exception as e:
             st.error(f"Failed to download {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
-                "staging_path": None,
+                "pdf_bytes": None,
                 "extracted": None,
                 "status": "error",
                 "error": f"Download failed: {e}",
@@ -276,7 +276,7 @@ def parse_selected_papers():
             st.error(f"Failed to parse {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
-                "staging_path": staging_path,
+                "pdf_bytes": pdf_bytes,
                 "extracted": None,
                 "status": "error",
                 "error": f"Parse failed: {e}",
@@ -293,7 +293,7 @@ def parse_selected_papers():
             extracted = kie.extract_from_text(parsed_doc.text_content, paper.arxiv_id)
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
-                "staging_path": staging_path,
+                "pdf_bytes": pdf_bytes,
                 "extracted": extracted,
                 "status": "complete",
             }
@@ -302,7 +302,7 @@ def parse_selected_papers():
             st.error(f"KIE extraction failed for {paper.arxiv_id}: {e}")
             st.session_state.parsed_papers[paper.arxiv_id] = {
                 "paper": paper,
-                "staging_path": staging_path,
+                "pdf_bytes": pdf_bytes,
                 "extracted": None,
                 "status": "error",
                 "error": f"KIE failed: {e}",
@@ -438,9 +438,9 @@ def add_to_knowledge_assistant():
             continue
 
         paper = data["paper"]
-        staging_path = data.get("staging_path")
-        if not staging_path:
-            st.error(f"No staging path for {arxiv_id}")
+        pdf_bytes = data.get("pdf_bytes")
+        if not pdf_bytes:
+            st.error(f"No PDF data for {arxiv_id}")
             continue
 
         progress.progress(
@@ -449,7 +449,7 @@ def add_to_knowledge_assistant():
         )
 
         try:
-            ingestion.promote_to_ka(paper, staging_path)
+            ingestion.promote_to_ka(paper, pdf_bytes)
             success_count += 1
         except Exception as e:
             st.error(f"Failed to add {arxiv_id}: {e}")

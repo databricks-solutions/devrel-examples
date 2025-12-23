@@ -220,10 +220,11 @@ class ArxivIngestion:
         volume_path = f"{self.config.volume_path}/{filename}"
         self.delete_file(volume_path)
 
-    def download_to_staging(self, paper: PaperMetadata) -> str:
+    def download_to_staging(self, paper: PaperMetadata) -> tuple[str, bytes]:
         """Download PDF from arxiv and upload to staging volume.
 
-        Returns the staging volume path. Does NOT save metadata to papers table.
+        Returns (staging_path, pdf_bytes). Does NOT save metadata to papers table.
+        PDF bytes are returned so they can be reused for promote_to_ka without re-downloading.
         """
         client = arxiv.Client()
         search = arxiv.Search(id_list=[paper.arxiv_id])
@@ -243,18 +244,14 @@ class ArxivIngestion:
             overwrite=True,
         )
 
-        return staging_path
+        return staging_path, pdf_content
 
-    def promote_to_ka(self, paper: PaperMetadata, staging_path: str) -> None:
-        """Copy PDF from staging to KA volume and save metadata.
+    def promote_to_ka(self, paper: PaperMetadata, pdf_content: bytes) -> None:
+        """Upload PDF to KA volume and save metadata.
 
         This is called when user explicitly adds a paper to the Knowledge Assistant.
+        Uses pdf_content passed from download_to_staging to avoid re-downloading.
         """
-        # Read from staging
-        response = self.client.files.download(staging_path)
-        pdf_content = response.contents.read()
-
-        # Upload to KA volume
         filename = f"{paper.arxiv_id.replace('/', '_')}.pdf"
         ka_path = f"{self.config.volume_path}/{filename}"
 
