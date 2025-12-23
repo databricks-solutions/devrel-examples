@@ -15,7 +15,7 @@ env:
     valueFrom: host
   # Unity Catalog resources (update these for your environment)
   - name: ARXIV_CATALOG
-    value: arxiv_demo
+    value: src
   - name: ARXIV_SCHEMA
     value: main
   - name: ARXIV_VOLUME
