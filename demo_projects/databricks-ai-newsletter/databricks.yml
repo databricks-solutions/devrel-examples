@@ -1,0 +1,149 @@
+# Databricks Asset Bundle configuration
+# Deploy with: databricks bundle deploy -t dev
+# Run with: databricks bundle run daily_ingest_job -t dev
+
+bundle:
+  name: databricks-ai-newsletter
+
+# Include local overrides if they exist (gitignored)
+# Copy databricks.local.yml.example to databricks.local.yml and update with your settings
+include:
+  - databricks.local.yml
+
+# Workspace configuration (update with your workspace URL)
+workspace:
+  host: https://your-workspace.cloud.databricks.com
+
+# Variables that can be referenced throughout the bundle
+variables:
+  catalog:
+    description: Unity Catalog name
+    default: main
+
+  schema:
+    description: Schema name for newsletter tables
+    default: newsletter
+
+  # Lakebase connection settings
+  # Run `python scripts/discover_lakebase.py` to find your values
+  lakebase_endpoint:
+    description: Full Lakebase endpoint path (projects/.../branches/.../endpoints/...)
+    default: projects/YOUR_PROJECT_ID/branches/YOUR_BRANCH_ID/endpoints/YOUR_ENDPOINT_ID
+
+  pghost:
+    description: PostgreSQL hostname
+    default: your-endpoint.database.region.cloud.databricks.com
+
+  pgdatabase:
+    description: PostgreSQL database name
+    default: databricks_postgres
+
+# Resources (jobs, pipelines, etc.)
+resources:
+  jobs:
+    daily_ingest_job:
+      name: "[${bundle.target}] Newsletter - Daily Ingestion"
+
+      # Schedule: Run daily at 2 AM Pacific Time
+      schedule:
+        quartz_cron_expression: "0 0 2 * * ?"
+        timezone_id: "America/Los_Angeles"
+        pause_status: PAUSED  # Set to UNPAUSED to enable auto-run
+
+      # Email notifications
+      # Uncomment and configure for your email
+      # email_notifications:
+      #   on_failure:
+      #     - your-email@example.com
+      #   no_alert_for_skipped_runs: true
+
+      # Job parameters (can override at runtime)
+      parameters:
+        - name: max_items
+          default: "100"
+        - name: run_mode
+          default: "production"
+        - name: lakebase_endpoint
+          default: "{{var.lakebase_endpoint}}"
+        - name: pghost
+          default: "{{var.pghost}}"
+        - name: pgdatabase
+          default: "{{var.pgdatabase}}"
+
+      # Job tasks
+      tasks:
+        - task_key: ingest_and_process
+          notebook_task:
+            notebook_path: ./notebooks/daily_ingest.ipynb
+            base_parameters:
+              max_items: "{{job.parameters.max_items}}"
+              run_mode: "{{job.parameters.run_mode}}"
+              lakebase_endpoint: "{{job.parameters.lakebase_endpoint}}"
+              pghost: "{{job.parameters.pghost}}"
+              pgdatabase: "{{job.parameters.pgdatabase}}"
+
+          # Cluster configuration (single-node for cost efficiency)
+          new_cluster:
+            node_type_id: i3.xlarge
+            num_workers: 0  # Single-node
+            spark_version: 14.3.x-scala2.12
+
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: "local[*]"
+
+            custom_tags:
+              ResourceClass: SingleNode
+              Project: Newsletter
+              Environment: ${bundle.target}
+
+          # Retry configuration
+          max_retries: 2
+          min_retry_interval_millis: 60000  # 1 minute
+          retry_on_timeout: true
+          timeout_seconds: 3600  # 1 hour max
+
+      # Job-level tags
+      tags:
+        environment: ${bundle.target}
+        team: devrel
+        project: newsletter
+
+# Deployment targets (environments)
+targets:
+  # Development deployment
+  dev:
+    mode: development
+    default: true
+    workspace:
+      root_path: ~/.bundle/${bundle.name}/${bundle.target}
+    # Override variables for dev (optional)
+    # variables:
+    #   lakebase_endpoint: "projects/YOUR_PROJECT/branches/YOUR_BRANCH/endpoints/YOUR_ENDPOINT"
+    #   pghost: "your-endpoint.database.region.cloud.databricks.com"
+    #   pgdatabase: "databricks_postgres"
+
+  # Production deployment
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/.bundle/${bundle.name}/${bundle.target}
+    # Production should use a service principal
+    # run_as:
+    #   service_principal_name: "newsletter-sp"
+    # Override variables for prod (optional)
+    # variables:
+    #   lakebase_endpoint: "projects/PROD_PROJECT/branches/main/endpoints/prod"
+    #   pghost: "prod-endpoint.database.region.cloud.databricks.com"
+    #   pgdatabase: "databricks_postgres"
+
+# Sync patterns (what files to upload to workspace)
+sync:
+  exclude:
+    - .venv
+    - data
+    - __pycache__
+    - "*.pyc"
+    - .env
+    - .git
+    - resources
