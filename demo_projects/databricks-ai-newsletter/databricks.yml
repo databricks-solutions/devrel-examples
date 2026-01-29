@@ -82,21 +82,6 @@ resources:
               pghost: "{{job.parameters.pghost}}"
               pgdatabase: "{{job.parameters.pgdatabase}}"
 
-          # Cluster configuration (single-node for cost efficiency)
-          new_cluster:
-            node_type_id: i3.xlarge
-            num_workers: 0  # Single-node
-            spark_version: 14.3.x-scala2.12
-
-            spark_conf:
-              spark.databricks.cluster.profile: singleNode
-              spark.master: "local[*]"
-
-            custom_tags:
-              ResourceClass: SingleNode
-              Project: Newsletter
-              Environment: ${bundle.target}
-
           # Retry configuration
           max_retries: 2
           min_retry_interval_millis: 60000  # 1 minute
