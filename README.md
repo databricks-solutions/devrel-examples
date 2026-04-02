@@ -2,9 +2,11 @@
 
 This repository contains examples from the Developer Relations team @ Databricks
 
-## Demo Projects
+## Repository Structure
 
-* [Arxiv Paper Analysis](demo_projects/arxiv)
+- **[`notebooks/`](notebooks/)** — Example notebooks covering Foundation Model APIs, Vector Search, AI Playground, MLflow, and more. See the [notebook catalog](notebooks/README.md) for details.
+- **[`demos/`](demos/)** — Self-contained demo projects:
+  - [Arxiv Paper Analysis](demos/arxiv)
 
 ## How to use
 
