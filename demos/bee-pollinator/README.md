@@ -74,7 +74,7 @@ The Supervisor Agent has no API yet, so this step is done in the UI.
    - **Description:** `Routes questions about bee colony health between USDA statistical data and beekeeping guidance documents`
    - **Add Agents:**
      - Click **Add Agent** and select **`USDA Bee Health Data`** (Genie Space)
-     - Click **Add Agent** again and select **`Bee Health Documents`** (Knowledge Assistant)
+     - Click **Add Agent** again and select **`Bee Health Documents`** (Knowledge Assistant via Agent Endpoint)
    - **Instructions:**
 
 ```
