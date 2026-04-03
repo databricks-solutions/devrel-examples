@@ -7,6 +7,7 @@ This repository contains examples from the Developer Relations team @ Databricks
 - **[`notebooks/`](notebooks/)** — Example notebooks covering Foundation Model APIs, Vector Search, AI Playground, MLflow, and more. See the [notebook catalog](notebooks/README.md) for details.
 - **[`demos/`](demos/)** — Self-contained demo projects:
   - [Arxiv Paper Analysis](demos/arxiv)
+  - [Bee Pollinator Health Analysis](demos/bee-pollinator)
 
 ## How to use
 

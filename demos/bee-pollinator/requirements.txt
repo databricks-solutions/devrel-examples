@@ -1,0 +1,15 @@
+# Bee Pollinator Demo Dependencies
+
+# Databricks SDK for agent creation and workspace management
+databricks-sdk>=0.20.0
+
+# Data fetching and processing
+requests>=2.31.0
+pandas>=2.0.0
+
+# MLflow for tracing and evaluation
+mlflow>=2.10.0
+
+# Optional: for notebook/interactive use
+ipython>=8.12.0
+jupyter>=1.0.0

@@ -1,0 +1,59 @@
+# Databricks Asset Bundle configuration for the Bee Pollinator demo.
+#
+# Deploys a single job that loads data, uploads PDFs, and creates
+# the Genie Space + Knowledge Assistant. The Supervisor Agent must
+# still be created manually (no SDK support yet).
+#
+# Usage:
+#   databricks bundle validate
+#   databricks bundle deploy
+#   databricks bundle run setup_demo
+
+bundle:
+  name: bee-pollinator-demo
+
+variables:
+  catalog:
+    description: Unity Catalog catalog name
+    default: main
+  schema:
+    description: Schema name for bee health data
+    default: bee_pollinator
+  warehouse_id:
+    description: SQL Warehouse ID (for Genie Space)
+
+resources:
+  jobs:
+    setup_demo:
+      name: "[${bundle.target}] bee-pollinator-setup"
+      tasks:
+        - task_key: load_data
+          notebook_task:
+            notebook_path: ./scripts/load_data.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          environment_key: default
+        - task_key: create_agents
+          depends_on:
+            - task_key: load_data
+          notebook_task:
+            notebook_path: ./scripts/create_agents.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              warehouse_id: ${var.warehouse_id}
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "1"
+            dependencies:
+              - databricks-sdk>=0.44.0
+
+targets:
+  dev:
+    mode: development
+    default: true
