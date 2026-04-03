@@ -29,7 +29,17 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for full sourcing, licensing, a
 
 ## Setup
 
-### Step 1: Deploy and run the bundle (~10 minutes)
+### Step 1: Create a SQL Warehouse
+In your Databricks workspace, navigate to the SQL Warehouses section.
+
+1. Select the warehouse you want to use. If you don't have one, create a new one.
+Click on the SQL warehouse you wish to use with Genie.
+
+2. Copy the warehouse ID:
+You can find the warehouse ID either in the URL when you select the warehouse, or on the warehouse details page. 
+You will need its warehouse_id for the next step.
+
+### Step 2: Deploy and run the bundle (~10 minutes)
 
 ```bash
 cd demos/bee-pollinator
@@ -53,7 +63,7 @@ This creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates a Genie 
 | `schema` | `bee_pollinator` | Schema for demo tables |
 | `warehouse_id` | — (required) | SQL Warehouse ID for Genie Space |
 
-### Step 2: Create the Supervisor Agent (~5 minutes)
+### Step 3: Create the Supervisor Agent (~5 minutes)
 
 The Supervisor Agent has no API yet, so this step is done in the UI.
 
@@ -86,7 +96,7 @@ When synthesizing from both agents, connect the data insight to the document gui
 
 4. Click **Save** / **Deploy**
 
-### Step 3: Verify
+### Step 4: Verify
 
 Confirm in the Databricks UI:
 - **Data** > your catalog > your schema: 3 tables (`honey_production`, `colony_loss`, `colony_stressors`) and a `guidance_docs` volume with 4 PDFs
