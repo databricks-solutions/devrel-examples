@@ -4,25 +4,15 @@ A demonstration of the Databricks [Multi-Agent Supervisor](https://docs.databric
 
 ## Architecture
 
-```
-User Question
-     |
-     v
-┌─────────────────────────┐
-│  Supervisor Agent        │
-│  "Bee Colony Health      │
-│   Advisor"               │
-└─────┬──────────┬─────────┘
-      │          │
-      v          v
-┌──────────┐  ┌──────────────┐
-│  Genie   │  │  Knowledge   │
-│  Space   │  │  Assistant   │
-│          │  │              │
-│ 3 USDA   │  │ 4 beekeeping │
-│ tables   │  │ PDFs         │
-└──────────┘  └──────────────┘
-```
+![architecture](./images/bee_colony_health_pollinator.svg)
+
+A **Supervisor Agent** intelligently routes user queries to two specialized subagents:
+
+| Subagent | Purpose | Databricks Component |
+|----------|---------|---------------------|
+| **Genie Agent** | Structured data for bee colonoies queries (SQL, stats, trends) | **Genie Space** → Unity Catalog table |
+| **Knowledge Assistant** | Covers varroa mite management, pollinator conservation, agricultural habitat, and native plant guides. | **AgentBricks Knowledge Assistant** → Vector Search index |
+| **Synthesizer** | Routes, delegates, synthesizes responses from both subagents | **AgentBricks Supervisor Agent** |
 
 **Structured data (Genie):** ~13,500 rows of real USDA NASS data — honey production, colony loss rates, and colony stressors by state/year (2015-2025).
 
