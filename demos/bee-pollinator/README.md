@@ -4,25 +4,15 @@ A demonstration of the Databricks [Multi-Agent Supervisor](https://docs.databric
 
 ## Architecture
 
-```
-User Question
-     |
-     v
-┌─────────────────────────┐
-│  Supervisor Agent        │
-│  "Bee Colony Health      │
-│   Advisor"               │
-└─────┬──────────┬─────────┘
-      │          │
-      v          v
-┌──────────┐  ┌──────────────┐
-│  Genie   │  │  Knowledge   │
-│  Space   │  │  Assistant   │
-│          │  │              │
-│ 3 USDA   │  │ 4 beekeeping │
-│ tables   │  │ PDFs         │
-└──────────┘  └──────────────┘
-```
+![architecture](./images/bee_colony_health_pollinator.svg)
+
+A **Supervisor Agent** intelligently routes user queries to two specialized subagents:
+
+| Subagent | Purpose | Databricks Component |
+|----------|---------|---------------------|
+| **Genie Agent** | Structured data for bee colonies queries (SQL, stats, trends) | **Genie Space** → Unity Catalog table |
+| **Knowledge Assistant** | Covers varroa mite management, pollinator conservation, agricultural habitat, and native plant guides. | **AgentBricks Knowledge Assistant** → Vector Search index |
+| **Synthesizer** | Routes, delegates, synthesizes responses from both subagents | **AgentBricks Supervisor Agent** |
 
 **Structured data (Genie):** ~13,500 rows of real USDA NASS data — honey production, colony loss rates, and colony stressors by state/year (2015-2025).
 
@@ -39,7 +29,12 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for full sourcing, licensing, a
 
 ## Setup
 
-### Step 1: Deploy and run the bundle (~10 minutes)
+### Step 1: Find your SQL Warehouse
+In your Databricks workspace, navigate to the SQL Warehouses section.
+
+1. Select an existing Pro or Serverless SQL warehouse (or create one if needed). Copy the warehouse ID from its details page.
+
+### Step 2: Deploy and run the bundle (~10 minutes)
 
 ```bash
 cd demos/bee-pollinator
@@ -63,7 +58,7 @@ This creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates a Genie 
 | `schema` | `bee_pollinator` | Schema for demo tables |
 | `warehouse_id` | — (required) | SQL Warehouse ID for Genie Space |
 
-### Step 2: Create the Supervisor Agent (~5 minutes)
+### Step 3: Create the Supervisor Agent (~5 minutes)
 
 The Supervisor Agent has no API yet, so this step is done in the UI.
 
@@ -74,7 +69,7 @@ The Supervisor Agent has no API yet, so this step is done in the UI.
    - **Description:** `Routes questions about bee colony health between USDA statistical data and beekeeping guidance documents`
    - **Add Agents:**
      - Click **Add Agent** and select **`USDA Bee Health Data`** (Genie Space)
-     - Click **Add Agent** again and select **`Bee Health Documents`** (Knowledge Assistant)
+     - Click **Add Agent** again and select **`Bee Health Documents`** (Knowledge Assistant via Agent Endpoint)
    - **Instructions:**
 
 ```
@@ -96,7 +91,7 @@ When synthesizing from both agents, connect the data insight to the document gui
 
 4. Click **Save** / **Deploy**
 
-### Step 3: Verify
+### Step 4: Verify
 
 Confirm in the Databricks UI:
 - **Data** > your catalog > your schema: 3 tables (`honey_production`, `colony_loss`, `colony_stressors`) and a `guidance_docs` volume with 4 PDFs
