@@ -138,6 +138,24 @@ If any of the primary queries don't land well:
 - Document: `Which native plants should I recommend for spring forage in the Northeast?`
 - Cross-modal: `North Dakota produces the most honey but has significant colony loss. What management practices should they adopt?`
 
+## Add an Evaluation Judge with Genie Code
+
+After running a few queries, you can use **Genie Code** to add an LLM judge that automatically evaluates incoming requests. This is itself a demo of Databricks' AI-assisted evaluation workflow.
+
+1. Navigate to **Experiments** in the left sidebar and open the experiment associated with your Supervisor Agent
+2. Click the **Genie Code** icon to open the assistant
+3. Prompt it with something like:
+
+> Add a judge to this experiment that evaluates whether each request was routed to the correct sub-agent. It should check whether data/statistics questions go to the Genie agent, guidance/best-practices questions go to the Knowledge Assistant, and combined questions are routed to both. Return a categorical label — one of "correct", "partially_correct", or "incorrect" — along with a brief rationale explaining which agent(s) were called and why the routing was or wasn't appropriate for the query.
+
+Genie Code will inspect your existing traces, identify the routing structure, and generate the Python code to register and start a routing-correctness judge. You may need to click the **Run** button in the Genie Code chat window to execute the generated code.
+
+![Genie Code generating a routing judge](./images/genie-code-judge.png)
+
+Once active, the judge evaluates incoming traces and attaches feedback scores visible in the **Traces** tab.
+
+You can also add judges directly through the MLflow Experiment UI (Scorers tab → New Scorer) or programmatically via the SDK. See [Registering and Versioning Scorers](https://mlflow.org/docs/latest/genai/eval-monitor/scorers/versioning/) for details.
+
 ## Teardown
 
 ```bash
