@@ -10,7 +10,7 @@ A **Supervisor Agent** intelligently routes user queries to two specialized suba
 
 | Subagent | Purpose | Databricks Component |
 |----------|---------|---------------------|
-| **Genie Agent** | Structured data for bee colonoies queries (SQL, stats, trends) | **Genie Space** → Unity Catalog table |
+| **Genie Agent** | Structured data for bee colonies queries (SQL, stats, trends) | **Genie Space** → Unity Catalog table |
 | **Knowledge Assistant** | Covers varroa mite management, pollinator conservation, agricultural habitat, and native plant guides. | **AgentBricks Knowledge Assistant** → Vector Search index |
 | **Synthesizer** | Routes, delegates, synthesizes responses from both subagents | **AgentBricks Supervisor Agent** |
 
@@ -29,15 +29,10 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for full sourcing, licensing, a
 
 ## Setup
 
-### Step 1: Create a SQL Warehouse
+### Step 1: Find your SQL Warehouse
 In your Databricks workspace, navigate to the SQL Warehouses section.
 
-1. Select the warehouse you want to use. If you don't have one, create a new one.
-Click on the SQL warehouse you wish to use with Genie.
-
-2. Copy the warehouse ID:
-You can find the warehouse ID either in the URL when you select the warehouse, or on the warehouse details page. 
-You will need its warehouse_id for the next step.
+1. Select an existing Pro or Serverless SQL warehouse (or create one if needed). Copy the warehouse ID from its details page.
 
 ### Step 2: Deploy and run the bundle (~10 minutes)
 
