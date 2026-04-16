@@ -29,7 +29,7 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for full sourcing, licensing, a
 
 ## Setup
 
-Before following the [Declarative Asset Bundle](https://docs.databricks.com/aws/en/dev-tools/bundles) (DAB) steps below, please clone this repo. 
+Before following the [Declarative Automation Bundle](https://docs.databricks.com/aws/en/dev-tools/bundles) (DAB) steps below, please clone this repo. 
 
 ### Step 1: Find your SQL Warehouse
 In your Databricks workspace, navigate to the SQL Warehouses section.
