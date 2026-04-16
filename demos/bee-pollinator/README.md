@@ -29,6 +29,8 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for full sourcing, licensing, a
 
 ## Setup
 
+Before following the [Declarative Automation Bundle](https://docs.databricks.com/aws/en/dev-tools/bundles) (DAB) steps below, please clone this repo. 
+
 ### Step 1: Find your SQL Warehouse
 In your Databricks workspace, navigate to the SQL Warehouses section.
 
@@ -70,7 +72,8 @@ The Supervisor Agent has no API yet, so this step is done in the UI.
    - **Add Agents:**
      - Click **Add Agent** and select **`USDA Bee Health Data`** (Genie Space)
      - Click **Add Agent** again and select **`Bee Health Documents`** (Knowledge Assistant via Agent Endpoint)
-   - **Instructions:**
+   - Click **Optional->Instructions:**
+   Add the instructions for the Supervisor Agent.
 
 ```
 You are a bee colony health and pollinator conservation advisor. You help beekeepers, farmers, and agricultural extension agents by combining USDA data analysis with expert guidance from beekeeping and conservation documents.
@@ -89,7 +92,7 @@ Route questions as follows:
 When synthesizing from both agents, connect the data insight to the document guidance and provide specific, actionable recommendations. Cite data sources and document sections.
 ```
 
-4. Click **Save** / **Deploy**
+4. Click **Create Agent**
 
 ### Step 4: Verify
 
