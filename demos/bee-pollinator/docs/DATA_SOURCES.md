@@ -4,13 +4,13 @@ This product uses the NASS API but is not endorsed or certified by NASS.
 
 ## Data Overview
 
-The demo uses three structured tables (all real USDA NASS data) and four PDF documents (~140 pages).
+The demo uses three structured tables (all real USDA NASS data) and four PDF documents (~140 pages). The honey table is annual marketing-year data; the colony loss and stressor tables are quarterly Honey Bee Colonies data.
 
 | Table | Rows | Size | Source | Status |
 |-------|------|------|--------|--------|
-| `honey_production` | ~420 | ~15 KB | USDA NASS QuickStats API | Real data, checked-in snapshot |
-| `colony_loss` | ~1,700 | ~45 KB | USDA NASS QuickStats API | Real data, checked-in snapshot |
-| `colony_stressors` | ~11,400 | ~404 KB | USDA NASS QuickStats API | Real data, checked-in snapshot |
+| `honey_production` | ~420 | ~15 KB | USDA NASS QuickStats API | Annual marketing-year data, checked-in snapshot |
+| `colony_loss` | ~1,700 | ~45 KB | USDA NASS QuickStats API | Quarterly deadout data with max colony scale, checked-in snapshot |
+| `colony_stressors` | ~11,400 | ~404 KB | USDA NASS QuickStats API | Quarterly stressor data, checked-in snapshot |
 
 ## Recommended Default: Checked-In Snapshots (Zero Signup)
 
@@ -48,7 +48,7 @@ export USDA_NASS_API_KEY="your_key"
 python scripts/setup_data.py --catalog my_catalog --schema bee_health --refresh
 ```
 
-With `--refresh`, the script fetches live data from the USDA NASS QuickStats API and updates both tables with current statistics.
+With `--refresh`, the script fetches live data from the USDA NASS QuickStats API and updates all three tables with the same schema used by the checked-in snapshots.
 
 ### Regenerate Snapshots
 
@@ -61,9 +61,19 @@ USDA_NASS_API_KEY=your_key python scripts/generate_snapshots.py
 
 | Table | `statisticcat_desc` | Notes |
 |-------|-------------------|-------|
-| `honey_production` | `PRODUCTION` (LB, LB/COLONY), `INVENTORY`, `PRICE RECEIVED` | Combined from 4 sub-queries |
-| `colony_loss` | `LOSS, DEADOUT` | Both PCT OF COLONIES and absolute COLONIES counts, quarterly |
-| `colony_stressors` | `INVENTORY` (PCT OF COLONIES) | % affected by varroa, pesticides, disease, pests, other, unknown |
+| `honey_production` | `PRODUCTION` (LB, LB/COLONY), `INVENTORY`, `PRICE RECEIVED` | Combined from 4 sub-queries into an annual marketing-year table |
+| `colony_loss` | `LOSS, DEADOUT`, `INVENTORY` | Quarterly rows with max colonies, PCT OF COLONIES, and absolute COLONIES counts |
+| `colony_stressors` | `INVENTORY` (PCT OF COLONIES) | Quarterly % affected by varroa, pesticides, disease, pests, other, unknown; renovated rows are excluded |
+
+## Grain And Interpretation
+
+- `honey_production` is annual marketing-year USDA Honey data at `state x year`.
+- `colony_loss` is quarterly USDA Honey Bee Colonies data at `state x year x quarter`, with `max_colonies`, `loss_pct`, and `loss_colonies`.
+- `colony_stressors` is quarterly USDA Honey Bee Colonies data at `state x year x quarter x stressor`.
+- In this demo, colony-loss and stressor percentages stay quarterly. Do not roll up `loss_pct` or `pct_affected` into annual percentages.
+- Use `max_colonies` with `loss_colonies` when you need quarter-specific scale or when comparing a large state to a small state.
+- `loss_colonies` can be summed across quarters if you label the result as a sum of quarterly deadout counts rather than an official annual loss rate.
+- The upstream USDA series has partial coverage: `2019 Q2` is missing because the survey was suspended for that quarter, and `2025` currently includes `Q1-Q2` only.
 
 ## USDA Data Access Options (No-Auth)
 

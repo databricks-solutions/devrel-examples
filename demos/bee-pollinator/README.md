@@ -14,7 +14,7 @@ A **Supervisor Agent** intelligently routes user queries to two specialized suba
 | **Knowledge Assistant** | Covers varroa mite management, pollinator conservation, agricultural habitat, and native plant guides. | **AgentBricks Knowledge Assistant** → Vector Search index |
 | **Synthesizer** | Routes, delegates, synthesizes responses from both subagents | **AgentBricks Supervisor Agent** |
 
-**Structured data (Genie):** ~13,500 rows of real USDA NASS data — honey production, colony loss rates, and colony stressors by state/year (2015-2025).
+**Structured data (Genie):** ~13,500 rows of real USDA NASS data — annual honey metrics by state/year plus quarterly colony loss (including max colonies, deadout counts, and loss percent) and colony stressors by state/year/quarter (2015-2025).
 
 **Documents (Knowledge Assistant):** 4 public-domain PDFs (~140 pages) covering varroa mite management, pollinator conservation, agricultural habitat, and native plant guides.
 
@@ -81,7 +81,9 @@ You are a bee colony health and pollinator conservation advisor. You help beekee
 Route questions as follows:
 
 1. Data/Statistics → Genie Space (USDA Bee Health Data)
-   Questions about honey production, colony counts, loss rates, stressors, trends over time.
+   Questions about annual honey production, colony counts, honey pricing, and trends over time.
+   Questions about quarterly colony loss and quarterly stressors by state, year, and quarter.
+   If asked for annual colony loss or annual stressor conclusions, answer quarter-by-quarter instead.
 
 2. Guidance/Best Practices → Knowledge Assistant (Bee Health Documents)
    Questions about varroa management, treatment protocols, USDA programs, habitat creation, native plants.
@@ -105,9 +107,11 @@ Test the Supervisor Agent with these queries:
 
 | Type | Query |
 |------|-------|
-| Data (Genie) | "Which 5 states had the highest colony loss rates in 2023?" |
+| Data (Genie) | "Which 5 states had the highest colony loss percentage in Q4 2024, and what were their max colonies?" |
 | Document (KA) | "What does the Varroa Management Guide recommend for monitoring mite levels?" |
-| Cross-modal | "California lost 35% of colonies in 2023. What varroa management practices should California beekeepers prioritize?" |
+| Cross-modal | "Which stressors affected California colonies most in Q1 2024, and what varroa management practices should California beekeepers prioritize?" |
+
+Honey questions can stay annual. Colony-loss and stressor questions should stay quarterly because the USDA Honey Bee Colonies data in this demo is quarter-based. Use `max_colonies` with `loss_colonies` when you need quarter-specific scale.
 
 ### Alternative: Local CLI setup (no DABs)
 
@@ -134,7 +138,7 @@ If any of the primary queries don't land well:
 
 - Data: `Show me honey production trends in California over the last 5 years.`
 - Document: `Which native plants should I recommend for spring forage in the Northeast?`
-- Cross-modal: `North Dakota produces the most honey but has significant colony loss. What management practices should they adopt?`
+- Cross-modal: `Which stressors affected North Dakota colonies most in Q4 2024, and what management practices should beekeepers prioritize?`
 
 ## Add an Evaluation Judge with Genie Code
 

@@ -13,19 +13,30 @@ Usage:
     # Default: load from checked-in snapshots (zero signup)
     python setup_data.py --catalog your_catalog --schema bee_health
 
-    # Optional: refresh honey_production from live USDA NASS API
+    # Optional: refresh all USDA tables from live USDA NASS API
     export USDA_NASS_API_KEY="your_key_here"
     python setup_data.py --catalog your_catalog --schema bee_health --refresh
 """
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
 
 import pandas as pd
-import requests
+
+try:
+    from .generate_snapshots import (
+        fetch_colony_loss_snapshot as build_colony_loss_rows,
+        fetch_colony_stressors_snapshot as build_colony_stressor_rows,
+        fetch_honey_production_snapshot as build_honey_rows,
+    )
+except ImportError:
+    from generate_snapshots import (
+        fetch_colony_loss_snapshot as build_colony_loss_rows,
+        fetch_colony_stressors_snapshot as build_colony_stressor_rows,
+        fetch_honey_production_snapshot as build_honey_rows,
+    )
 
 try:
     from databricks.sdk import WorkspaceClient
@@ -35,211 +46,33 @@ except ImportError:
     sys.exit(1)
 
 
-# USDA NASS QuickStats API endpoint
-NASS_API_BASE = "https://quickstats.nass.usda.gov/api/api_GET/"
-
-
-def fetch_nass_data(api_key: str, params: dict) -> pd.DataFrame:
-    """Fetch data from USDA NASS QuickStats API."""
-    params["key"] = api_key
-    params["format"] = "JSON"
-
-    print(f"Fetching NASS data: {params.get('commodity_desc', 'N/A')} - {params.get('statisticcat_desc', 'N/A')}")
-
-    response = requests.get(NASS_API_BASE, params=params, timeout=60)
-    response.raise_for_status()
-
-    data = response.json()
-    if "data" not in data:
-        print(f"Warning: No data returned. Response keys: {data.keys()}")
+def _rows_to_frame(rows: list[dict], table_name: str) -> pd.DataFrame:
+    """Convert live snapshot rows to a DataFrame with the checked-in schema."""
+    if not rows:
+        print(f"Warning: No rows returned for {table_name}")
         return pd.DataFrame()
 
-    df = pd.DataFrame(data["data"])
-    print(f"  → {len(df)} records fetched")
+    df = pd.DataFrame(rows)
+    print(f"  → {table_name}: {len(df)} rows fetched")
     return df
 
 
-def fetch_honey_production(api_key: str) -> pd.DataFrame:
-    """Fetch USDA honey production data (2015-2024)."""
-    params = {
-        "commodity_desc": "HONEY",
-        "statisticcat_desc": "PRODUCTION",
-        "year__GE": 2015,
-        "agg_level_desc": "STATE",
-    }
-
-    df = fetch_nass_data(api_key, params)
-
-    if df.empty:
-        return df
-
-    # Select and rename key columns
-    df_clean = df[[
-        "state_name", "year", "Value", "unit_desc"
-    ]].copy()
-
-    df_clean.columns = ["state", "year", "production", "unit"]
-
-    # Convert production to numeric (remove commas)
-    df_clean["production"] = pd.to_numeric(
-        df_clean["production"].str.replace(",", ""), errors="coerce"
-    )
-
-    return df_clean
+def fetch_live_honey_table(api_key: str) -> pd.DataFrame:
+    """Fetch the live annual honey table using snapshot generation logic."""
+    print("Fetching live USDA honey metrics...")
+    return _rows_to_frame(build_honey_rows(api_key), "honey_production")
 
 
-def fetch_honey_yield(api_key: str) -> pd.DataFrame:
-    """Fetch honey yield per colony (2015-2024).
-
-    NASS has no separate YIELD category; yield is in the PRODUCTION query
-    filtered to the LB / COLONY unit.
-    """
-    params = {
-        "commodity_desc": "HONEY",
-        "statisticcat_desc": "PRODUCTION",
-        "unit_desc": "LB / COLONY",
-        "year__GE": 2015,
-        "agg_level_desc": "STATE",
-    }
-
-    df = fetch_nass_data(api_key, params)
-
-    if df.empty:
-        return df
-
-    df_clean = df[[
-        "state_name", "year", "Value", "unit_desc"
-    ]].copy()
-
-    df_clean.columns = ["state", "year", "yield_per_colony", "unit"]
-
-    df_clean["yield_per_colony"] = pd.to_numeric(
-        df_clean["yield_per_colony"].str.replace(",", ""), errors="coerce"
-    )
-
-    return df_clean
+def fetch_live_colony_loss_table(api_key: str) -> pd.DataFrame:
+    """Fetch the live quarterly colony loss table using snapshot generation logic."""
+    print("Fetching live USDA quarterly colony loss...")
+    return _rows_to_frame(build_colony_loss_rows(api_key), "colony_loss")
 
 
-def fetch_colony_counts(api_key: str) -> pd.DataFrame:
-    """Fetch colony counts (2015-2024)."""
-    params = {
-        "commodity_desc": "HONEY",
-        "class_desc": "ALL CLASSES",
-        "statisticcat_desc": "INVENTORY",
-        "year__GE": 2015,
-        "agg_level_desc": "STATE",
-    }
-
-    df = fetch_nass_data(api_key, params)
-
-    if df.empty:
-        return df
-
-    df_clean = df[[
-        "state_name", "year", "Value", "unit_desc"
-    ]].copy()
-
-    df_clean.columns = ["state", "year", "colonies", "unit"]
-
-    df_clean["colonies"] = pd.to_numeric(
-        df_clean["colonies"].str.replace(",", ""), errors="coerce"
-    )
-
-    return df_clean
-
-
-def fetch_honey_price(api_key: str) -> pd.DataFrame:
-    """Fetch honey price per lb (2015-2024)."""
-    params = {
-        "commodity_desc": "HONEY",
-        "statisticcat_desc": "PRICE RECEIVED",
-        "year__GE": 2015,
-        "agg_level_desc": "STATE",
-    }
-
-    df = fetch_nass_data(api_key, params)
-
-    if df.empty:
-        return df
-
-    df_clean = df[[
-        "state_name", "year", "Value", "unit_desc"
-    ]].copy()
-
-    df_clean.columns = ["state", "year", "price_per_lb", "unit"]
-
-    df_clean["price_per_lb"] = pd.to_numeric(
-        df_clean["price_per_lb"], errors="coerce"
-    )
-
-    return df_clean
-
-
-def combine_honey_data(production_df, yield_df, colony_df, price_df) -> pd.DataFrame:
-    """Combine honey production metrics into single table."""
-    print("\nCombining honey production data...")
-
-    # Start with production
-    combined = production_df[["state", "year", "production"]].copy()
-
-    # Merge yield
-    if not yield_df.empty:
-        combined = combined.merge(
-            yield_df[["state", "year", "yield_per_colony"]],
-            on=["state", "year"],
-            how="left"
-        )
-
-    # Merge colonies
-    if not colony_df.empty:
-        combined = combined.merge(
-            colony_df[["state", "year", "colonies"]],
-            on=["state", "year"],
-            how="left"
-        )
-
-    # Merge price
-    if not price_df.empty:
-        combined = combined.merge(
-            price_df[["state", "year", "price_per_lb"]],
-            on=["state", "year"],
-            how="left"
-        )
-
-    print(f"  → Combined table: {len(combined)} rows, {len(combined.columns)} columns")
-    return combined
-
-
-def fetch_colony_loss(api_key: str) -> pd.DataFrame:
-    """Fetch colony deadout loss data (2015-2024).
-
-    The correct NASS statisticcat_desc is 'LOSS, DEADOUT' (not 'LOSS').
-    Returns both absolute colony counts and percentage of colonies lost.
-    """
-    params = {
-        "commodity_desc": "HONEY",
-        "statisticcat_desc": "LOSS, DEADOUT",
-        "year__GE": 2015,
-        "agg_level_desc": "STATE",
-    }
-
-    df = fetch_nass_data(api_key, params)
-
-    if df.empty:
-        return df
-
-    df_clean = df[[
-        "state_name", "year", "Value", "unit_desc", "short_desc"
-    ]].copy()
-
-    df_clean.columns = ["state", "year", "value", "unit", "description"]
-
-    # Clean numeric values (remove commas, handle suppressed values like (D), (Z))
-    df_clean["value"] = pd.to_numeric(
-        df_clean["value"].str.replace(",", ""), errors="coerce"
-    )
-
-    return df_clean
+def fetch_live_colony_stressor_table(api_key: str) -> pd.DataFrame:
+    """Fetch the live quarterly colony stressor table using snapshot generation logic."""
+    print("Fetching live USDA quarterly colony stressors...")
+    return _rows_to_frame(build_colony_stressor_rows(api_key), "colony_stressors")
 
 
 
@@ -342,13 +175,9 @@ def main():
         print("FETCHING LIVE DATA FROM USDA NASS")
         print("="*60)
 
-        production_df = fetch_honey_production(api_key)
-        yield_df = fetch_honey_yield(api_key)
-        colony_df = fetch_colony_counts(api_key)
-        price_df = fetch_honey_price(api_key)
-        honey_table = combine_honey_data(production_df, yield_df, colony_df, price_df)
-        loss_table = fetch_colony_loss(api_key)
-        stressor_table = load_snapshot("colony_stressors")  # no separate live fetch yet
+        honey_table = fetch_live_honey_table(api_key)
+        loss_table = fetch_live_colony_loss_table(api_key)
+        stressor_table = fetch_live_colony_stressor_table(api_key)
     else:
         # Default: load from checked-in snapshots (no API key needed)
         print("\n" + "="*60)

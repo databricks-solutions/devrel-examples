@@ -25,10 +25,10 @@ except ImportError:
 # Test queries covering all routing patterns
 TEST_QUERIES = [
     {
-        "name": "Data Query (Genie)",
-        "query": "Which 5 states had the highest colony loss rates in 2023?",
+        "name": "Quarterly Data Query (Genie)",
+        "query": "Which 5 states had the highest colony loss percentage in Q4 2024, and what were their max colonies?",
         "expected_agent": "genie",
-        "success_indicators": ["state", "loss", "percent", "%", "California"],
+        "success_indicators": ["state", "loss", "percent", "max", "Q4"],
     },
     {
         "name": "Document Query (Knowledge Assistant)",
@@ -38,9 +38,9 @@ TEST_QUERIES = [
     },
     {
         "name": "Cross-Modal Query (Both Agents)",
-        "query": "California lost 35% of colonies in 2023. What varroa management practices should California beekeepers prioritize?",
+        "query": "Which stressors affected California colonies most in Q1 2024, and what varroa management practices should California beekeepers prioritize?",
         "expected_agent": "both",
-        "success_indicators": ["California", "varroa", "treatment", "mite", "protocol"],
+        "success_indicators": ["California", "Q1", "varroa", "treatment", "mite"],
     },
 ]
 

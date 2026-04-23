@@ -47,32 +47,38 @@ except ImportError as _import_err:
 # Agent instructions templates
 GENIE_INSTRUCTIONS = """You are a USDA bee colony health data analyst. You have access to three tables:
 
-1. **honey_production** — State-level honey production data (2015-2025)
+1. **honey_production** — State-level annual honey metrics (marketing year, 2015-2025)
    - Columns: state, year, production, yield_per_colony, colonies, price_per_lb
-   - Use for: production trends, yield analysis, colony counts, pricing
+   - Use for: annual production trends, yield analysis, colony counts, pricing
 
-2. **colony_loss** — Colony deadout loss data (2015-2025)
-   - Columns: state, year, quarter, loss_pct, loss_colonies
-   - Use for: loss trends by state and quarter, identifying high-loss regions
+2. **colony_loss** — Quarterly colony deadout loss data (2015-2025)
+   - Columns: state, year, quarter, max_colonies, loss_pct, loss_colonies
+   - Use for: quarter-specific loss comparisons, scale/context, and quarter-by-quarter trends
 
-3. **colony_stressors** — Colony stressor data (2015-2025)
+3. **colony_stressors** — Quarterly colony stressor data (2015-2025)
    - Columns: state, year, quarter, stressor, pct_affected
    - Stressors: Varroa Mites, Pesticides, Disease, Pests (Excl Varroa Mites), Other Causes, Unknown Causes
-   - Use for: identifying which stressors drive colony loss, seasonal stressor patterns
+   - Use for: quarter-specific stressor patterns and seasonal comparisons
 
 **Query Guidelines:**
-- Join tables on `state` and `year` (and `quarter` for loss + stressors) when combining data
-- Use aggregations (SUM, AVG, MAX) for trend analysis
-- Filter by state or year range as needed
-- When asked about "top N" states, use ORDER BY and LIMIT
-- For colony health questions, combine colony_loss and colony_stressors
-- For economic questions, use honey_production (price data)
-- For stressor analysis, correlate colony_stressors with colony_loss
+- Use `honey_production` for annual honey questions.
+- Use `colony_loss` and `colony_stressors` for quarter-specific colony health questions.
+- Join `colony_loss` and `colony_stressors` on `state`, `year`, and `quarter`.
+- Only join `honey_production` to quarterly tables when the quarter context is explicit.
+- Cast numeric string columns before aggregating or ordering, for example `CAST(loss_pct AS DOUBLE)`.
+- Use `max_colonies` to show quarter-specific scale and to compare against `loss_colonies`.
+- Do not sum or average `loss_pct` across quarters to create annual loss rates.
+- Do not sum `pct_affected` across quarters or across stressors.
+- If asked for an annual colony loss or annual stressor answer, explain that the USDA colony tables here are quarterly and offer a quarter-by-quarter answer instead.
+- Ignore any `Renovated` rows if they appear in older stressor snapshots.
+- When asked about "top N" states for colony health data, include the requested quarter in the filter and answer.
+- For deadout counts, use `loss_colonies` with an explicit quarter filter.
 
 **Example Queries:**
-- "Top 5 states by honey production in 2024" → SELECT state, production FROM honey_production WHERE year = 2024 ORDER BY production DESC LIMIT 5
-- "States with highest loss rates" → SELECT state, AVG(loss_pct) as avg_loss FROM colony_loss GROUP BY state ORDER BY avg_loss DESC
-- "Which stressors affect the most colonies?" → SELECT stressor, AVG(pct_affected) as avg_pct FROM colony_stressors GROUP BY stressor ORDER BY avg_pct DESC
+- "Top 5 states by honey production in 2024" → SELECT state, CAST(production AS DOUBLE) AS production FROM honey_production WHERE year = 2024 ORDER BY CAST(production AS DOUBLE) DESC LIMIT 5
+- "Top 5 states by colony loss percentage in Q4 2024" → SELECT state, quarter, CAST(max_colonies AS DOUBLE) AS max_colonies, CAST(loss_pct AS DOUBLE) AS loss_pct, CAST(loss_colonies AS DOUBLE) AS loss_colonies FROM colony_loss WHERE year = 2024 AND quarter = 'Q4' ORDER BY CAST(loss_pct AS DOUBLE) DESC LIMIT 5
+- "Show California max colonies vs colonies lost quarter by quarter in 2024" → SELECT quarter, CAST(max_colonies AS DOUBLE) AS max_colonies, CAST(loss_colonies AS DOUBLE) AS loss_colonies, CAST(loss_pct AS DOUBLE) AS loss_pct FROM colony_loss WHERE state = 'California' AND year = 2024 ORDER BY quarter
+- "Which stressors affected the largest share of colonies in Q4 2024?" → SELECT stressor, AVG(CAST(pct_affected AS DOUBLE)) AS avg_pct FROM colony_stressors WHERE year = 2024 AND quarter = 'Q4' GROUP BY stressor ORDER BY avg_pct DESC
 """
 
 KA_INSTRUCTIONS = """You are a bee colony health and pollinator conservation expert. You have access to four key documents:
@@ -104,10 +110,11 @@ SUPERVISOR_INSTRUCTIONS = """You are a bee colony health and pollinator conserva
 **Route questions as follows:**
 
 1. **Data/Statistics Questions → Genie Space (USDA Bee Health Data)**
-   - Questions about honey production, colony counts, trends over time
-   - Questions about colony loss rates, stressors by state/year
+   - Questions about annual honey production, honey colony counts, honey pricing, and trends over time
+   - Questions about quarterly colony loss and quarterly stressors by state, year, and quarter
    - Examples:
-     • "Which states had highest colony loss in 2023?"
+     • "Which states had the highest colony loss percentage in Q4 2024?"
+     • "Show California max colonies vs colonies lost quarter by quarter in 2024"
      • "Show honey production trends in California over last 5 years"
      • "What is the average price per lb of honey in 2024?"
 
@@ -125,11 +132,11 @@ SUPERVISOR_INSTRUCTIONS = """You are a bee colony health and pollinator conserva
    - Questions that need BOTH data insight AND expert guidance
    - Data establishes context, documents provide actionable recommendations
    - Examples:
-     • "California lost 35% of colonies. What varroa management should they prioritize?"
-       → Genie: confirm CA loss rate, identify varroa as top stressor
+     • "Which stressors affected California colonies most in Q1 2024, and what varroa management should California beekeepers prioritize?"
+       → Genie: inspect CA Q1 2024 loss and stressor data
        → KA: retrieve varroa treatment protocols for CA climate
-     • "North Dakota produces the most honey but has high colony loss. What management practices should they adopt?"
-       → Genie: show ND production and loss data
+     • "North Dakota produces the most honey. What did its colony loss look like quarter by quarter in 2024, and what management practices should beekeepers prioritize?"
+       → Genie: show ND production plus quarter-by-quarter 2024 loss data
        → KA: recommend varroa management and habitat practices
 
 **Synthesis Guidelines:**
@@ -137,14 +144,15 @@ SUPERVISOR_INSTRUCTIONS = """You are a bee colony health and pollinator conserva
 - Provide specific, actionable recommendations
 - Cite data sources (USDA tables) and document sections
 - Focus on practical next steps for the user
+- If a user asks for annual colony loss or annual stressor conclusions, keep the data discussion quarter-specific and explain that these USDA colony tables are quarterly.
 
 **Tone:** Professional, helpful, evidence-based. You're advising agricultural professionals.
 """
 
 
 GENIE_DESCRIPTION = (
-    "USDA bee colony health data analyst with access to honey production, "
-    "colony loss, and colony stressor tables."
+    "USDA bee colony health data analyst with annual honey metrics and "
+    "quarterly colony loss and stressor tables."
 )
 
 KA_DESCRIPTION = (
@@ -184,11 +192,15 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
                     },
                     {
                         "id": _genie_id(),
-                        "question": ["Which states have the highest average colony loss rates?"],
+                        "question": ["Which 5 states had the highest colony loss percentage in Q4 2024?"],
                     },
                     {
                         "id": _genie_id(),
-                        "question": ["Which stressors affect the most colonies?"],
+                        "question": ["Show California max colonies vs colonies lost quarter by quarter in 2024"],
+                    },
+                    {
+                        "id": _genie_id(),
+                        "question": ["Which stressors affected the largest share of colonies in Q4 2024?"],
                     },
                 ],
                 key=lambda x: x["id"],
@@ -200,7 +212,7 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
                     {
                         "identifier": honey_table,
                         "description": [
-                            "State-level honey production data from 2015-2025, including "
+                            "State-level annual honey metrics from 2015-2025, including "
                             "production, yield_per_colony, colonies, and price_per_lb."
                         ],
                     },
@@ -208,7 +220,7 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
                         "identifier": loss_table,
                         "description": [
                             "Quarterly colony deadout loss data from 2015-2025, including "
-                            "loss_pct and loss_colonies by state, year, and quarter."
+                            "max_colonies, loss_pct, and loss_colonies by state, year, and quarter."
                         ],
                     },
                     {
@@ -216,7 +228,7 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
                         "description": [
                             "Quarterly colony stressor data from 2015-2025, including "
                             "Varroa Mites, Pesticides, Disease, and other causes by "
-                            "state, year, and quarter."
+                            "state, year, and quarter. Renovated rows are excluded."
                         ],
                     },
                 ],
@@ -236,24 +248,39 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
                         "id": _genie_id(),
                         "question": ["Top 5 states by honey production in 2024"],
                         "sql": [
-                            f"SELECT state, production FROM {honey_table} "
-                            "WHERE year = 2024 ORDER BY production DESC LIMIT 5"
+                            f"SELECT state, CAST(production AS DOUBLE) AS production "
+                            f"FROM {honey_table} WHERE year = 2024 "
+                            "ORDER BY CAST(production AS DOUBLE) DESC LIMIT 5"
                         ],
                     },
                     {
                         "id": _genie_id(),
-                        "question": ["States with highest loss rates"],
+                        "question": ["Which 5 states had the highest colony loss percentage in Q4 2024?"],
                         "sql": [
-                            f"SELECT state, AVG(loss_pct) AS avg_loss FROM {loss_table} "
-                            "GROUP BY state ORDER BY avg_loss DESC"
+                            f"SELECT state, quarter, CAST(max_colonies AS DOUBLE) AS max_colonies, "
+                            f"CAST(loss_pct AS DOUBLE) AS loss_pct, CAST(loss_colonies AS DOUBLE) "
+                            f"AS loss_colonies FROM {loss_table} "
+                            "WHERE year = 2024 AND quarter = 'Q4' "
+                            "ORDER BY CAST(loss_pct AS DOUBLE) DESC LIMIT 5"
                         ],
                     },
                     {
                         "id": _genie_id(),
-                        "question": ["Which stressors affect the most colonies?"],
+                        "question": ["Show California max colonies vs colonies lost quarter by quarter in 2024"],
                         "sql": [
-                            f"SELECT stressor, AVG(pct_affected) AS avg_pct "
-                            f"FROM {stressor_table} GROUP BY stressor ORDER BY avg_pct DESC"
+                            f"SELECT quarter, CAST(max_colonies AS DOUBLE) AS max_colonies, "
+                            f"CAST(loss_colonies AS DOUBLE) AS loss_colonies, "
+                            f"CAST(loss_pct AS DOUBLE) AS loss_pct FROM {loss_table} "
+                            "WHERE state = 'California' AND year = 2024 ORDER BY quarter"
+                        ],
+                    },
+                    {
+                        "id": _genie_id(),
+                        "question": ["Which stressors affected the largest share of colonies in Q4 2024?"],
+                        "sql": [
+                            f"SELECT stressor, AVG(CAST(pct_affected AS DOUBLE)) AS avg_pct "
+                            f"FROM {stressor_table} WHERE year = 2024 AND quarter = 'Q4' "
+                            "GROUP BY stressor ORDER BY avg_pct DESC"
                         ],
                     },
                 ],
