@@ -27,6 +27,10 @@ SNAPSHOT_DIR = Path(__file__).parent.parent / "data" / "snapshots"
 NASS_API_BASE = "https://quickstats.nass.usda.gov/api/api_GET/"
 
 SKIP_STATES = {"other states", "us total", "united states"}
+STRESSOR_NAME_ALIASES = {
+    "Pests ((Excl Varroa Mites))": "Pests (Excl Varroa Mites)",
+    "Pests (Excl Varroa Mites)": "Pests (Excl Varroa Mites)",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -66,6 +70,41 @@ def _build_map(records: list[dict]) -> dict:
     return m
 
 
+def _format_decimal(value: float) -> str:
+    return f"{value:.2f}".rstrip("0").rstrip(".")
+
+
+def _normalize_price(record: dict) -> str:
+    """Normalize honey prices to dollars per pound."""
+    raw = _clean_val(record.get("Value"))
+    if not raw:
+        return ""
+
+    try:
+        price = float(raw)
+    except ValueError:
+        return raw
+
+    unit_desc = str(record.get("unit_desc") or "").upper()
+    if "CENTS" in unit_desc:
+        price /= 100
+    elif "DOL" not in unit_desc and "$" not in unit_desc and price >= 20:
+        # Older QuickStats rows may omit explicit dollar metadata while still
+        # returning cent-denominated values like 221 for $2.21/lb.
+        price /= 100
+
+    return _format_decimal(price)
+
+
+def _normalize_stressor_name(raw: str) -> str | None:
+    stressor = raw.strip().title().replace("((", "(").replace("))", ")")
+    stressor = " ".join(stressor.split())
+    stressor = STRESSOR_NAME_ALIASES.get(stressor, stressor)
+    if stressor == "Renovated":
+        return None
+    return stressor
+
+
 def fetch_honey_production_snapshot(api_key: str) -> list[dict]:
     """Fetch and combine honey production, yield, colony, and price data."""
     prod = _fetch_nass(api_key, {
@@ -88,7 +127,15 @@ def fetch_honey_production_snapshot(api_key: str) -> list[dict]:
 
     yield_map = _build_map(yields)
     colony_map = _build_map(colonies)
-    price_map = _build_map(prices)
+    price_map = {}
+    for r in prices:
+        state = r["state_name"].strip().title()
+        year = str(r["year"])
+        if state.lower() in SKIP_STATES:
+            continue
+        price = _normalize_price(r)
+        if price:
+            price_map[(state, year)] = price
 
     rows, seen = [], set()
     for r in prod:
@@ -104,26 +151,18 @@ def fetch_honey_production_snapshot(api_key: str) -> list[dict]:
             continue
         seen.add(key)
 
-        price_cents = price_map.get(key, "")
-        price_dollars = ""
-        if price_cents:
-            try:
-                price_dollars = str(round(float(price_cents) / 100, 2))
-            except ValueError:
-                price_dollars = price_cents
-
         rows.append({
             "state": state, "year": year, "production": production,
             "yield_per_colony": yield_map.get(key, ""),
             "colonies": colony_map.get(key, ""),
-            "price_per_lb": price_dollars,
+            "price_per_lb": price_map.get(key, ""),
         })
     rows.sort(key=lambda x: (x["state"], x["year"]))
     return rows
 
 
 def fetch_colony_loss_snapshot(api_key: str) -> list[dict]:
-    """Fetch quarterly colony loss data (pct and absolute)."""
+    """Fetch quarterly colony loss data (pct, absolute, and max colonies)."""
     quarter_map = {
         "JAN THRU MAR": "Q1", "APR THRU JUN": "Q2",
         "JUL THRU SEP": "Q3", "OCT THRU DEC": "Q4",
@@ -138,8 +177,12 @@ def fetch_colony_loss_snapshot(api_key: str) -> list[dict]:
         "commodity_desc": "HONEY", "statisticcat_desc": "LOSS, DEADOUT",
         "year__GE": 2015, "agg_level_desc": "STATE", "unit_desc": "COLONIES",
     })
+    max_colonies = _fetch_nass(api_key, {
+        "commodity_desc": "HONEY", "statisticcat_desc": "INVENTORY, MAX",
+        "year__GE": 2015, "agg_level_desc": "STATE", "unit_desc": "COLONIES",
+    })
 
-    pct_map, abs_map = {}, {}
+    pct_map, abs_map, max_map = {}, {}, {}
     for r in loss_pct:
         state = r["state_name"].strip().title()
         year = str(r["year"])
@@ -154,12 +197,20 @@ def fetch_colony_loss_snapshot(api_key: str) -> list[dict]:
         val = _clean_val(r.get("Value"))
         if val and q and state.lower() not in SKIP_STATES:
             abs_map[(state, year, q)] = val
+    for r in max_colonies:
+        state = r["state_name"].strip().title()
+        year = str(r["year"])
+        q = quarter_map.get(r.get("reference_period_desc", ""), "")
+        val = _clean_val(r.get("Value"))
+        if val and q and state.lower() not in SKIP_STATES:
+            max_map[(state, year, q)] = val
 
-    all_keys = sorted(set(list(pct_map.keys()) + list(abs_map.keys())))
+    all_keys = sorted(set(list(pct_map.keys()) + list(abs_map.keys()) + list(max_map.keys())))
     rows = []
     for state, year, quarter in all_keys:
         rows.append({
             "state": state, "year": year, "quarter": quarter,
+            "max_colonies": max_map.get((state, year, quarter), ""),
             "loss_pct": pct_map.get((state, year, quarter), ""),
             "loss_colonies": abs_map.get((state, year, quarter), ""),
         })
@@ -197,11 +248,10 @@ def fetch_colony_stressors_snapshot(api_key: str) -> list[dict]:
         desc = r.get("short_desc", "")
         # Extract stressor from "AFFECTED BY <stressor> - INVENTORY"
         m = re.search(r"AFFECTED BY (.+?) - INVENTORY", desc)
-        if m:
-            stressor = m.group(1).strip().title()
-        elif "RENOVATED" in desc:
-            stressor = "Renovated"
-        else:
+        if not m:
+            continue
+        stressor = _normalize_stressor_name(m.group(1))
+        if not stressor:
             continue
 
         rows.append({
@@ -273,12 +323,18 @@ def generate_colony_loss_sample() -> list[dict]:
     for state in LOSS_STATES:
         for year in YEARS:
             for qi, quarter in enumerate(["Q1", "Q2", "Q3", "Q4"], 1):
+                base_max = max(5000, STATE_PRODUCTION_BASELINES.get(state, 1000) * 10)
+                seasonal_max = [0.95, 1.0, 1.08, 1.0][qi - 1]
+                max_colonies = round(_seeded_variation(
+                    f"{state}{quarter}", year, base_max * seasonal_max, 0.12
+                ))
                 base_loss = 30 + (hash(f"{state}{year}") % 20)
                 seasonal = [1.2, 0.7, 0.8, 1.0][qi - 1]
                 loss_pct = round(base_loss * seasonal)
-                loss_colonies = round(loss_pct * 50)
+                loss_colonies = round(max_colonies * loss_pct / 100)
                 rows.append({
                     "state": state, "year": year, "quarter": quarter,
+                    "max_colonies": max_colonies,
                     "loss_pct": loss_pct, "loss_colonies": loss_colonies,
                 })
     return rows
