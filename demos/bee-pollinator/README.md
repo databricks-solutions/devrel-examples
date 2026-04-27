@@ -2,6 +2,24 @@
 
 A demonstration of the Databricks [Multi-Agent Supervisor](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor) pattern using real USDA bee colony health and pollination data. The supervisor routes questions between structured agricultural data (Genie) and beekeeping guidance documents (Knowledge Assistant).
 
+## What this demo does
+
+You build a supervisor agent that sits in front of two specialized sub-agents and decides which one (or both) should handle each user query:
+
+- **A user asks a data question** ("Top 5 states by colony loss in Q4 2024?") — the supervisor routes to a **Genie agent**, which writes SQL against three Delta tables (~13,500 rows of real USDA data) and returns tabular results.
+- **A user asks a guidance question** ("How should I monitor varroa mite levels?") — the supervisor routes to a **Knowledge Assistant**, which retrieves answers from four public-domain PDFs indexed via Vector Search.
+- **A user asks a question that needs both** ("Which stressors hit California hardest last quarter, and what should beekeepers do about it?") — the supervisor calls both agents and synthesizes a single answer that connects the data to actionable recommendations.
+
+The whole stack deploys with one `databricks bundle deploy` and one `databricks bundle run`. The bundle creates the Delta tables, uploads the PDFs to a Unity Catalog Volume, and provisions the Genie Space and Knowledge Assistant. The only manual step is wiring up the Supervisor Agent in the UI (API coming shorlty...).
+
+After running a few queries, you can inspect **MLflow traces** to see exactly how the supervisor routed each request, which sub-agents were called, and how long each step took — built-in observability with no extra instrumentation.
+
+The demo demonstrates the following Databricks tecnologies:
+ * The Agent Bricks Supervisor and subagents routing and delegation pattern
+ * The Genie's ability to generate SQL queries from a natural language 
+ * The ease with which you can use Declarative Automation Bundle (DAB) from your local host and deploy your project to remote Datarbicks workspace. 
+ * Using MLflow's obserbaility to examine traces and evaluate by adding judges
+
 ## Architecture
 
 ![architecture](./images/bee_colony_health_pollinator.svg)
@@ -52,7 +70,7 @@ databricks bundle run setup_demo \
 
 Add `--profile your_profile` if not using the default CLI profile.
 
-This creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates a Genie Space and Knowledge Assistant — all automated.
+This set of databricks commands creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates a Genie Space and Knowledge Assistant — all automated.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
