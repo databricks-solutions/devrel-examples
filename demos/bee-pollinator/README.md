@@ -14,11 +14,11 @@ The whole stack deploys with one `databricks bundle deploy` and one `databricks 
 
 After running a few queries, you can inspect **MLflow traces** to see exactly how the supervisor routed each request, which sub-agents were called, and how long each step took — built-in observability with no extra instrumentation.
 
-The demo demonstrates the following Databricks tecnologies:
+The demo demonstrates the following Databricks technologies:
  * The Agent Bricks Supervisor and subagents routing and delegation pattern
  * The Genie's ability to generate SQL queries from a natural language 
  * The ease with which you can use Declarative Automation Bundle (DAB) from your local host and deploy your project to remote Datarbicks workspace. 
- * Using MLflow's obserbaility to examine traces and evaluate by adding judges
+ * Use MLflow's observability to examine traces and evaluate by adding judges
 
 ## Architecture
 
