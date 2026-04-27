@@ -16,7 +16,7 @@ After running a few queries, you can inspect **MLflow traces** to see exactly ho
 
 The demo demonstrates the following Databricks technologies:
  * The Agent Bricks Supervisor and subagents routing and delegation pattern
- * The Genie's ability to generate SQL queries from a natural language 
+ * The Genie's ability to generate SQL queries from a natural language query
  * The ease with which you can use Declarative Automation Bundle (DAB) from your local host and deploy your project to remote Datarbicks workspace. 
  * Use MLflow's observability to examine traces and evaluate by adding judges
 
