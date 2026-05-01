@@ -6,7 +6,7 @@ A demonstration of the Databricks [Multi-Agent Supervisor](https://docs.databric
 
 You build a supervisor agent that sits in front of two specialized sub-agents and decides which one (or both) should handle each user query:
 
-- **A user asks a data question** ("Top 5 states by colony loss in Q4 2024?") — the supervisor routes to a **Genie agent**, which writes SQL against three Delta tables (~13,500 rows of real USDA data) and returns tabular results.
+- **A user asks a data question** ("Top 5 states by colony loss in Q1 2023?") — the supervisor routes to a **Genie agent**, which writes SQL against three Delta tables (~13,500 rows of real USDA data) and returns tabular results.
 - **A user asks a guidance question** ("How should I monitor varroa mite levels?") — the supervisor routes to a **Knowledge Assistant**, which retrieves answers from four public-domain PDFs indexed via Vector Search.
 - **A user asks a question that needs both** ("Which stressors hit California hardest last quarter, and what should beekeepers do about it?") — the supervisor calls both agents and synthesizes a single answer that connects the data to actionable recommendations.
 
