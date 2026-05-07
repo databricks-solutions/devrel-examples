@@ -1,8 +1,8 @@
 # Databricks Asset Bundle configuration for the Bee Pollinator demo.
 #
 # Deploys a single job that loads data, uploads PDFs, and creates
-# the Genie Space + Knowledge Assistant. The Supervisor Agent must
-# still be created manually (no SDK support yet).
+# the Genie Space, Knowledge Assistant, and Supervisor Agent end-to-end.
+# Fully programmatic — no UI steps required.
 #
 # Usage:
 #   databricks bundle validate
@@ -51,7 +51,9 @@ resources:
           spec:
             client: "1"
             dependencies:
-              - databricks-sdk>=0.44.0
+              # >=0.106.0 exposes w.supervisor_agents (programmatic
+              # Supervisor Agent creation, no UI step required).
+              - databricks-sdk>=0.106.0
 
 targets:
   dev:
