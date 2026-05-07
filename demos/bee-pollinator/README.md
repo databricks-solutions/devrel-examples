@@ -60,14 +60,17 @@ This creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates the Geni
 | `schema` | `bee_pollinator` | Schema for demo tables |
 | `warehouse_id` | — (required) | SQL Warehouse ID for Genie Space |
 
-### Step 3: Verify
+### Step 3: Wait for indexing
+
+The Knowledge Assistant indexes the PDFs after creation. For this demo's ~140 pages this typically takes **~10 minutes** (sometimes longer). The Supervisor Agent will return apologetic, ungrounded responses to document questions until indexing completes — that's the signal to wait.
+
+### Step 4: Verify
 
 Confirm in the Databricks UI:
 - **Data** > your catalog > your schema: 3 tables (`honey_production`, `colony_loss`, `colony_stressors`) and a `guidance_docs` volume with 4 PDFs
 - **Agents**: Genie Space (`USDA Bee Health Data`), Knowledge Assistant (`Bee Health Documents`), and Supervisor Agent (`Bee Colony Health Advisor`) all present
-- Knowledge Assistant indexing may take 1-3 minutes to finish
 
-Test the Supervisor Agent with these queries:
+Test the Supervisor Agent in the **Agents** UI with these queries:
 
 | Type | Query |
 |------|-------|
@@ -77,14 +80,24 @@ Test the Supervisor Agent with these queries:
 
 Honey questions can stay annual. Colony-loss and stressor questions should stay quarterly because the USDA Honey Bee Colonies data in this demo is quarter-based. Use `max_colonies` with `loss_colonies` when you need quarter-specific scale.
 
+Or run the same three queries from the CLI:
+
+```bash
+pip install -r requirements.txt    # or: uv pip install -r requirements.txt
+python scripts/verify_demo.py --supervisor "Bee Colony Health Advisor" --profile your_profile
+```
+
+The script resolves the display name to the supervisor's serving endpoint (`mas-XXXXXXXX-endpoint`) and reports pass/fail per query.
+
 ### Alternative: Local CLI setup (no DABs)
 
 ```bash
-python scripts/setup_data.py --catalog your_catalog --schema bee_health
-python scripts/setup_agents.py --catalog your_catalog --schema bee_health --warehouse-id your_warehouse_id
+pip install -r requirements.txt    # or: uv pip install -r requirements.txt
+python scripts/setup_data.py --catalog your_catalog --schema your_schema
+python scripts/setup_agents.py --catalog your_catalog --schema your_schema --warehouse-id your_warehouse_id
 ```
 
-This creates the Genie Space, Knowledge Assistant, and Supervisor Agent — no manual UI step.
+This creates the Genie Space, Knowledge Assistant, and Supervisor Agent — no manual UI step. Use the same `--schema` for both commands.
 
 ## Running the Demo
 

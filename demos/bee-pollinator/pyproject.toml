@@ -6,14 +6,14 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "databricks-sdk>=0.106.0",
+    "databricks-openai>=0.5.0",
     "requests>=2.31.0",
     "pandas>=2.0.0",
     "mlflow>=2.10.0",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+# Demo scripts only — not packaged or installed. Use `uv pip install -r
+# requirements.txt` (or `uv sync --no-install-project`) to install deps.
 
 [tool.ruff]
 line-length = 100

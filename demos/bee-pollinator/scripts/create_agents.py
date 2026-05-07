@@ -83,7 +83,9 @@ ka_name, ka_id = setup_agents.create_knowledge_assistant(
 
 # --- Create Supervisor Agent ---
 
-supervisor_name = setup_agents.create_supervisor_agent(w, genie_id, ka_id)
+supervisor_resource, supervisor_endpoint = setup_agents.create_supervisor_agent(
+    w, genie_id, ka_id
+)
 
 # COMMAND ----------
 
@@ -92,5 +94,7 @@ print("AGENT SETUP COMPLETE")
 print(f"{'=' * 60}")
 print(f"\nGenie Space: {genie_id}")
 print(f"Knowledge Assistant: {ka_name}")
-print(f"Supervisor Agent: {supervisor_name}")
-print("\nKnowledge Assistant indexing may take 1-3 minutes to complete.")
+print(f"Supervisor Agent: {supervisor_resource}")
+if supervisor_endpoint:
+    print(f"Supervisor endpoint: {supervisor_endpoint}")
+print("\nKnowledge Assistant indexing typically takes ~10 minutes for ~140 pages.")

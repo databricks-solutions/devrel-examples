@@ -323,6 +323,15 @@ def _build_genie_serialized_space(catalog: str, schema: str) -> str:
     return json.dumps(serialized_space)
 
 
+def _get_existing_genie_space(w: WorkspaceClient, title: str) -> str | None:
+    """Look up an existing Genie Space by exact title; returns its space_id or None."""
+    resp = w.genie.list_spaces()
+    for s in (resp.spaces or []):
+        if s.title == title:
+            return s.space_id
+    return None
+
+
 def create_genie_space(
     w: WorkspaceClient,
     catalog: str,
@@ -330,7 +339,7 @@ def create_genie_space(
     warehouse_id: str,
     space_name: str,
 ) -> str:
-    """Create a Genie Space with the bee health demo tables and instructions."""
+    """Create or reuse a Genie Space with the bee health demo tables and instructions."""
     print(f"\nCreating Genie Space: {space_name}")
     _require_sdk_capability(
         w,
@@ -344,6 +353,11 @@ def create_genie_space(
         "This databricks-sdk version does not expose w.genie.create_space. "
         "Run: pip install --upgrade databricks-sdk",
     )
+
+    existing_id = _get_existing_genie_space(w, space_name)
+    if existing_id is not None:
+        print(f"  ✓ Genie Space already exists: {existing_id}")
+        return existing_id
 
     space = w.genie.create_space(
         warehouse_id=warehouse_id,
@@ -476,10 +490,12 @@ def create_supervisor_agent(
     genie_space_id: str,
     ka_id: str,
     supervisor_name: str = SUPERVISOR_NAME,
-) -> str:
+) -> tuple[str, str | None]:
     """Create or reuse a Supervisor Agent wired to the Genie Space and KA.
 
-    Returns the supervisor agent resource name (supervisor-agents/{id}).
+    Returns (resource_name, endpoint_name) where resource_name is of the form
+    'supervisor-agents/{id}' and endpoint_name is the serving endpoint
+    ('mas-XXXXXXXX-endpoint') used to invoke the agent.
     """
     print(f"\nCreating Supervisor Agent: {supervisor_name}")
     _require_sdk_capability(
@@ -503,6 +519,11 @@ def create_supervisor_agent(
         print(f"  ✓ Supervisor Agent already exists: {agent.supervisor_agent_id or agent.id}")
 
     parent = _supervisor_agent_name(agent)
+
+    # list_supervisor_agents may omit endpoint_name; refetch if needed.
+    if not agent.endpoint_name:
+        agent = w.supervisor_agents.get_supervisor_agent(name=parent)
+
     existing_tool_ids = _existing_tool_ids(w, parent)
 
     if GENIE_TOOL_ID not in existing_tool_ids:
@@ -535,7 +556,10 @@ def create_supervisor_agent(
     else:
         print(f"  ✓ Knowledge Assistant tool already attached: {KA_TOOL_ID}")
 
-    return parent
+    if agent.endpoint_name:
+        print(f"  ✓ Endpoint: {agent.endpoint_name}")
+
+    return parent, agent.endpoint_name
 
 
 def main():
@@ -586,7 +610,7 @@ def main():
     )
 
     # Create Supervisor Agent (programmatic — no UI step required)
-    supervisor_name = create_supervisor_agent(
+    supervisor_resource, supervisor_endpoint = create_supervisor_agent(
         w, genie_id, ka_id, supervisor_name=args.supervisor_name
     )
 
@@ -597,10 +621,12 @@ def main():
 
     print(f"\n✓ Genie Space ready: {genie_id}")
     print(f"✓ Knowledge Assistant ready: {ka_name}")
-    print(f"✓ Supervisor Agent ready: {supervisor_name}")
+    print(f"✓ Supervisor Agent ready: {supervisor_resource}")
+    if supervisor_endpoint:
+        print(f"✓ Supervisor endpoint: {supervisor_endpoint}")
     print("\nNext steps:")
-    print("1. Wait for Knowledge Assistant indexing to complete (1-3 min)")
-    print("2. Test the demo with verification queries")
+    print("1. Wait for Knowledge Assistant indexing to complete (~10 min for ~140 pages)")
+    print(f"2. Verify with: python scripts/verify_demo.py --supervisor '{args.supervisor_name}'")
 
 
 if __name__ == "__main__":

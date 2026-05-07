@@ -3,6 +3,11 @@ Bee Pollinator Demo - Verification Script
 
 Tests the deployed Supervisor Agent with sample queries to verify everything works.
 
+The --supervisor argument accepts either the display name (e.g.
+"Bee Colony Health Advisor") or the serving endpoint name (e.g.
+"mas-XXXXXXXX-endpoint"). Display names are resolved to the endpoint
+via the Databricks SDK.
+
 Usage:
     python verify_demo.py --supervisor "Bee Colony Health Advisor"
     python verify_demo.py --supervisor "Bee Colony Health Advisor" --profile your_profile
@@ -45,6 +50,28 @@ TEST_QUERIES = [
 ]
 
 
+def resolve_supervisor_endpoint(w: WorkspaceClient, supervisor: str) -> str:
+    """Resolve a display name to its serving endpoint, or pass through if already an endpoint."""
+    if supervisor.startswith("mas-") and supervisor.endswith("-endpoint"):
+        return supervisor
+    for agent in w.supervisor_agents.list_supervisor_agents():
+        if agent.display_name == supervisor:
+            endpoint = agent.endpoint_name
+            if not endpoint and agent.name:
+                endpoint = w.supervisor_agents.get_supervisor_agent(name=agent.name).endpoint_name
+            if not endpoint:
+                raise RuntimeError(
+                    f"Supervisor Agent '{supervisor}' has no endpoint_name. "
+                    "It may still be provisioning — try again in a minute."
+                )
+            return endpoint
+    raise RuntimeError(
+        f"No Supervisor Agent found with display name '{supervisor}'. "
+        f"Pass an endpoint name (mas-XXXXXXXX-endpoint) instead, or check that "
+        f"setup_demo finished successfully."
+    )
+
+
 def query_agent(client: DatabricksOpenAI, supervisor_name: str, query: str) -> str:
     """Query the supervisor agent and return response text."""
     try:
@@ -77,7 +104,11 @@ def check_success(response: str, indicators: list) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description="Verify bee pollinator demo")
-    parser.add_argument("--supervisor", required=True, help="Supervisor agent name or endpoint")
+    parser.add_argument(
+        "--supervisor",
+        required=True,
+        help="Supervisor Agent display name or serving endpoint name",
+    )
     parser.add_argument("--profile", default=None, help="Databricks CLI profile name")
     parser.add_argument("--verbose", action="store_true", help="Show full responses")
 
@@ -92,7 +123,11 @@ def main():
     w = WorkspaceClient(profile=args.profile) if args.profile else WorkspaceClient()
     client = DatabricksOpenAI()
 
-    # Get experiment for MLflow tracing
+    endpoint = resolve_supervisor_endpoint(w, args.supervisor)
+    if endpoint != args.supervisor:
+        print(f"  Resolved '{args.supervisor}' → endpoint '{endpoint}'")
+
+    # Get experiment for MLflow tracing (named after the supervisor display name).
     try:
         experiment = mlflow.get_experiment_by_name(args.supervisor)
         if experiment:
@@ -100,7 +135,7 @@ def main():
     except Exception as e:
         print(f"⚠ Could not find MLflow experiment: {e}")
 
-    print(f"\nTesting Supervisor Agent: {args.supervisor}")
+    print(f"\nTesting Supervisor Agent endpoint: {endpoint}")
     print(f"Running {len(TEST_QUERIES)} test queries...\n")
 
     # Run test queries
@@ -111,7 +146,7 @@ def main():
 
         # Query the agent
         start_time = time.time()
-        response = query_agent(client, args.supervisor, test["query"])
+        response = query_agent(client, endpoint, test["query"])
         elapsed = time.time() - start_time
 
         # Check success
@@ -151,10 +186,6 @@ def main():
 
     if passed == total:
         print("\n🎉 All tests passed! Demo is ready.")
-        print("\nNext steps:")
-        print("1. Review DEMO_GUIDE.md for booth demo flow")
-        print("2. Bookmark the Supervisor Agent URL")
-        print("3. Test on conference WiFi if possible")
         sys.exit(0)
     else:
         print("\n⚠ Some tests failed. Review errors above.")
