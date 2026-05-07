@@ -1,6 +1,7 @@
 # Databricks notebook source
 """
-Create Genie Space and Knowledge Assistant for the bee-pollinator demo.
+Create Genie Space, Knowledge Assistant, and Supervisor Agent for the
+bee-pollinator demo. Fully programmatic — no UI steps required.
 
 Runs as a Databricks job task within the DAB bundle. Uses the Databricks SDK
 (pre-installed on serverless) with automatic workspace authentication.
@@ -74,15 +75,17 @@ genie_id = setup_agents.create_genie_space(
 
 # --- Create Knowledge Assistant ---
 
-ka_id = setup_agents.create_knowledge_assistant(
+ka_name, ka_id = setup_agents.create_knowledge_assistant(
     w, catalog, schema, "guidance_docs", "Bee Health Documents"
 )
 
 # COMMAND ----------
 
-# --- Print Supervisor Agent instructions (manual step) ---
+# --- Create Supervisor Agent ---
 
-setup_agents.print_supervisor_instructions("USDA Bee Health Data", "Bee Health Documents")
+supervisor_resource, supervisor_endpoint = setup_agents.create_supervisor_agent(
+    w, genie_id, ka_id
+)
 
 # COMMAND ----------
 
@@ -90,5 +93,8 @@ print(f"\n{'=' * 60}")
 print("AGENT SETUP COMPLETE")
 print(f"{'=' * 60}")
 print(f"\nGenie Space: {genie_id}")
-print(f"Knowledge Assistant: {ka_id}")
-print("\nNext: Create Supervisor Agent manually (see instructions above)")
+print(f"Knowledge Assistant: {ka_name}")
+print(f"Supervisor Agent: {supervisor_resource}")
+if supervisor_endpoint:
+    print(f"Supervisor endpoint: {supervisor_endpoint}")
+print("\nKnowledge Assistant indexing typically takes ~10 minutes for ~140 pages.")

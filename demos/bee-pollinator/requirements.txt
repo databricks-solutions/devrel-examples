@@ -1,7 +1,11 @@
 # Bee Pollinator Demo Dependencies
 
-# Databricks SDK for agent creation and workspace management
-databricks-sdk>=0.20.0
+# Databricks SDK for agent creation and workspace management.
+# >=0.106.0 exposes w.supervisor_agents (programmatic Supervisor Agent creation).
+databricks-sdk>=0.106.0
+
+# Used by scripts/verify_demo.py to query the Supervisor Agent endpoint.
+databricks-openai>=0.5.0
 
 # Data fetching and processing
 requests>=2.31.0
