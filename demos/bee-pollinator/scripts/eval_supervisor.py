@@ -46,7 +46,7 @@ Prerequisites:
 # MAGIC
 # MAGIC Judge Model URI: databricks:/"your_judge_model"
 # MAGIC
-# MAGIC Supervisor Agent Endpoint Name: <mas-YOUR-supervisor endpoint name>
+# MAGIC Supervisor : <YOUR-supervisor name>
 
 # COMMAND ----------
 
