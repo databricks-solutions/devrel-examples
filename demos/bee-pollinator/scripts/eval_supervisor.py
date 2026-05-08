@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Install dependencies
-# MAGIC %pip install mlflow==3.11.0 databricks_openai
+# MAGIC %pip install mlflow>=3.11.0 databricks_openai databricks-sdk>=0.106.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -51,9 +51,9 @@ Prerequisites:
 # COMMAND ----------
 
 dbutils.widgets.text(
-    "supervisor_name",
-    "mas-f6c439c0-endpoint",
-    "Supervisor Agent Endpoint Name",
+    "supervisor",
+    "Bee Colony Health Advisor",
+    "Supervisor Agent (display name or mas-XXXXXXXX-endpoint)",
 )
 dbutils.widgets.text(
     "judge_model",
@@ -61,10 +61,10 @@ dbutils.widgets.text(
     "Judge Model URI",
 )
 
-supervisor_name = dbutils.widgets.get("supervisor_name")
+supervisor = dbutils.widgets.get("supervisor")
 judge_model = dbutils.widgets.get("judge_model")
 
-print(f"Supervisor: {supervisor_name}")
+print(f"Supervisor: {supervisor}")
 print(f"Judge model: {judge_model}")
 
 # COMMAND ----------
@@ -73,19 +73,47 @@ import time
 from typing import Literal
 
 import mlflow
+from databricks.sdk import WorkspaceClient
 from databricks_openai import DatabricksOpenAI
 from mlflow.entities import Feedback
 from mlflow.genai.judges import make_judge
 from mlflow.genai.scorers import Correctness, Guidelines, scorer
 
-client = DatabricksOpenAI()
+def resolve_endpoint(w: WorkspaceClient, name: str) -> str:
+    """Accept a Supervisor Agent display name or its serving endpoint;
+    return the endpoint name (mas-XXXXXXXX-endpoint)."""
+    if name.startswith("mas-") and name.endswith("-endpoint"):
+        return name
+    for a in w.supervisor_agents.list_supervisor_agents():
+        if a.display_name == name:
+            endpoint = a.endpoint_name
+            if not endpoint and a.name:
+                endpoint = w.supervisor_agents.get_supervisor_agent(name=a.name).endpoint_name
+            if not endpoint:
+                raise RuntimeError(
+                    f"Supervisor Agent '{name}' has no endpoint_name yet — still provisioning?"
+                )
+            return endpoint
+    available = [a.display_name for a in w.supervisor_agents.list_supervisor_agents()]
+    raise RuntimeError(
+        f"No Supervisor Agent named '{name}'. Available: {available}"
+    )
 
-current_user = (
-    spark.sql("SELECT current_user()").first()[0]
-)
-experiment_name = (
-    f"/Users/{current_user}/bee_pollinator_eval"
-)
+# COMMAND ----------
+#
+# MAGIC %md
+# MAGIC ## Resolve Supervisor Endpoint
+# MAGIC
+# MAGIC The Supervisor Agent display name or its serving endpoint.
+
+# COMMAND ----------
+
+w = WorkspaceClient()
+supervisor_endpoint = resolve_endpoint(w, supervisor)
+print(f"Endpoint: {supervisor_endpoint}")
+client = DatabricksOpenAI()
+current_user = spark.sql("SELECT current_user()").first()[0]
+experiment_name = f"/Users/{current_user}/bee_pollinator_eval"
 mlflow.openai.autolog()
 mlflow.set_experiment(experiment_name)
 print(f"MLflow experiment: {experiment_name}")
@@ -284,7 +312,7 @@ for row in eval_dataset:
 def predict_supervisor(request: str) -> str:
     """Query the Supervisor Agent and return the response text."""
     response = client.responses.create(
-        model=supervisor_name,
+        model=supervisor_endpoint,
         input=[{"role": "user", "content": request}],
     )
     answer = "".join([

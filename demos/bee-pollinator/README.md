@@ -158,23 +158,6 @@ If any of the primary queries don't land well:
 - Document: `Which native plants should I recommend for spring forage in the Northeast?`
 - Cross-modal: `Which stressors affected North Dakota colonies most in Q4 2024, and what management practices should beekeepers prioritize?`
 
-## Add an Evaluation Judge with Genie Code
-
-After running a few queries, you can use **Genie Code** to add an LLM judge that automatically evaluates incoming requests. This is itself a demo of Databricks' AI-assisted evaluation workflow.
-
-1. Navigate to **Experiments** in the left sidebar and open the experiment associated with your Supervisor Agent
-2. Click the **Genie Code** icon to open the assistant
-3. Prompt it with something like:
-
-> Add a judge to this experiment that evaluates whether each request was routed to the correct sub-agent. It should check whether data/statistics questions go to the Genie agent, guidance/best-practices questions go to the Knowledge Assistant, and combined questions are routed to both. Return a categorical label — one of "correct", "partially_correct", or "incorrect" — along with a brief rationale explaining which agent(s) were called and why the routing was or wasn't appropriate for the query.
-
-Genie Code will inspect your existing traces, identify the routing structure, and generate the Python code to register and start a routing-correctness judge. You may need to click the **Run** button in the Genie Code chat window to execute the generated code.
-
-![Genie Code generating a routing judge](./images/genie-code-judge.png)
-
-Once active, the judge evaluates incoming traces and attaches feedback scores visible in the **Traces** tab.
-
-You can also add judges directly through the MLflow Experiment UI (Scorers tab → New Scorer) or programmatically via the SDK. See [Registering and Versioning Scorers](https://mlflow.org/docs/latest/genai/eval-monitor/scorers/versioning/) for details.
 
 ## Evaluate the Supervisor Agent with MLflow
 
@@ -184,7 +167,7 @@ For a more comprehensive evaluation beyond ad-hoc Genie Code judges, the `eval_s
 
 Each Supervisor's query trace shows the judge's score and the rational for that score.
 
-![Evalution rational](./images/eval_rational.png)
+![Evalution rational](./images/eval_rationale.png)
 
 ### What it evaluates
 
@@ -199,10 +182,10 @@ The notebook sends 12 queries (4 Genie-only, 4 Knowledge-Assistant-only, 4 both)
 
 ### How to run it
 
-1. Change to your deployed bundle directory `scripts/eval_supervisor.py` into your Databricks workspace
+1. Open the scripts/eval_supervisor.py in your Databricks workspace (the bundle uploads it under /Workspace/Users/`you`/.bundle/bee-pollinator-demo/dev/files/scripts/)
 2. Attach the notebook to a cluster
 3. Set the two widgets at the top:
-   - **Supervisor Agent Endpoint Name** — the serving endpoint for your Supervisor Agent (e.g., `mas-f6c439c0-endpoint`)
+   - **Supervisor** — the serving endpoint for your Supervisor Agent (e.g., `mas-f6c439c0-endpoint`)
    - **Judge Model URI** — the model used for LLM judge scorers (e.g., `databricks:/databricks-gpt-5-4`)
 4. Run All Cells — the notebook installs dependencies, queries the agent, runs all four judges, and displays results
 
