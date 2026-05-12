@@ -72,10 +72,10 @@ Add `--profile your_profile` if not using the default CLI profile.
 
 This creates 3 Delta tables, uploads 4 PDFs to a UC Volume, and creates the Genie Space, Knowledge Assistant, and Supervisor Agent — all automated.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable  | Default | Description |
+|-----------|---------|-------------|
 | `catalog` | `main` | Unity Catalog catalog name |
-| `schema` | `bee_pollinator` | Schema for demo tables |
+| `schema`  | `bee_pollinator` | Schema for demo tables |
 | `warehouse_id` | — (required) | SQL Warehouse ID for Genie Space |
 
 ### Step 3: Wait for indexing
@@ -93,8 +93,8 @@ Test the Supervisor Agent in the **Agents** UI with these queries:
 | Type | Query |
 |------|-------|
 | Data (Genie) | "Which 5 states had the highest colony loss percentage in Q4 2024, and what were their max colonies?" |
-| Document (KA) | "What does the Varroa Management Guide recommend for monitoring mite levels?" |
-| Cross-modal | "Which stressors affected California colonies most in Q1 2024, and what varroa management practices should California beekeepers prioritize?" |
+| Document (KA)| "What does the Varroa Management Guide recommend for monitoring mite levels?" |
+| Cross-modal  | "Which stressors affected California colonies most in Q1 2024, and what varroa management practices should California beekeepers prioritize?" |
 
 Honey questions can stay annual. Colony-loss and stressor questions should stay quarterly because the USDA Honey Bee Colonies data in this demo is quarter-based. Use `max_colonies` with `loss_colonies` when you need quarter-specific scale.
 
@@ -135,23 +135,45 @@ If any of the primary queries don't land well:
 - Document: `Which native plants should I recommend for spring forage in the Northeast?`
 - Cross-modal: `Which stressors affected North Dakota colonies most in Q4 2024, and what management practices should beekeepers prioritize?`
 
-## Add an Evaluation Judge with Genie Code
 
-After running a few queries, you can use **Genie Code** to add an LLM judge that automatically evaluates incoming requests. This is itself a demo of Databricks' AI-assisted evaluation workflow.
+## Evaluate the Supervisor Agent with MLflow
 
-1. Navigate to **Experiments** in the left sidebar and open the experiment associated with your Supervisor Agent
-2. Click the **Genie Code** icon to open the assistant
-3. Prompt it with something like:
+For a more comprehensive evaluation beyond ad-hoc Genie Code judges, the `eval_supervisor` notebook runs 12 queries across all three routing patterns and scores every response using MLflow's GenAI evaluation framework — `mlflow.genai.evaluate()`.
 
-> Add a judge to this experiment that evaluates whether each request was routed to the correct sub-agent. It should check whether data/statistics questions go to the Genie agent, guidance/best-practices questions go to the Knowledge Assistant, and combined questions are routed to both. Return a categorical label — one of "correct", "partially_correct", or "incorrect" — along with a brief rationale explaining which agent(s) were called and why the routing was or wasn't appropriate for the query.
+![Evaluation results dashboard](./images/bee_pollinator_evals.png)
 
-Genie Code will inspect your existing traces, identify the routing structure, and generate the Python code to register and start a routing-correctness judge. You may need to click the **Run** button in the Genie Code chat window to execute the generated code.
+Each Supervisor's query trace shows the judge's score and the rational for that score.
 
-![Genie Code generating a routing judge](./images/genie-code-judge.png)
+![Evalution rational](./images/eval_rationale.png)
 
-Once active, the judge evaluates incoming traces and attaches feedback scores visible in the **Traces** tab.
+### What it evaluates
 
-You can also add judges directly through the MLflow Experiment UI (Scorers tab → New Scorer) or programmatically via the SDK. See [Registering and Versioning Scorers](https://mlflow.org/docs/latest/genai/eval-monitor/scorers/versioning/) for details.
+The notebook sends 12 queries (4 Genie-only, 4 Knowledge-Assistant-only, 4 both) through the deployed Supervisor Agent and applies four scorers to each response:
+
+| Scorer | Type | What it measures |
+|--------|------|------------------|
+| **Routing Correctness** | `make_judge()` | Did the supervisor route to the correct sub-agent(s)? |
+| **Answer Correctness** | Built-in `Correctness()` | Does the response contain the expected facts? |
+| **Completeness** | `@scorer` + `make_judge()` | Does the response cover all expected elements? |
+| **Response Quality** | Built-in `Guidelines()` | Does the response meet domain quality standards? |
+
+### How to run it
+
+1. Open the scripts/eval_supervisor.py in your Databricks workspace (the bundle uploads it under /Workspace/Users/`you`/.bundle/bee-pollinator-demo/dev/files/scripts/)
+2. Attach the notebook to a cluster
+3. Set the two widgets at the top:
+   - **Supervisor** — the serving endpoint for your Supervisor Agent (e.g., `mas-f6c439c0-endpoint`)
+   - **Judge Model URI** — the model used for LLM judge scorers (e.g., `databricks:/databricks-gpt-5-4`)
+4. Run All Cells — the notebook installs dependencies, queries the agent, runs all four judges, and displays results
+
+The evaluation takes 3-6 minutes depending on agent response times.
+
+### What you get
+
+- **MLflow experiment** at `/Users/<you>/bee_pollinator_eval` with metrics logged per run
+- **Eval results table** with per-query scores for routing, correctness, completeness, and quality
+- **Aggregate metrics** displayed as an HTML dashboard in the notebook
+- All traces are captured via `mlflow.openai.autolog()` for drill-down in the MLflow Traces tab
 
 ## Teardown
 
