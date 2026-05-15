@@ -1,0 +1,16 @@
+.DS_Store
+node_modules/
+.agents/
+client/dist/
+dist/
+build/
+deploy/
+skills-lock.json
+.env
+.databricks/
+.smoke-test/
+test-results/
+playwright-report/
+
+# Auto-generated types (endpoint-specific, varies per developer)
+shared/appkit-types/serving.d.ts

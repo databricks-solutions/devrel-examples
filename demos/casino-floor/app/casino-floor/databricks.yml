@@ -1,0 +1,59 @@
+bundle:
+  name: casino-floor
+
+# Databricks Apps installs dependencies from package.json/package-lock.json,
+# runs the package build script, then starts app.yaml's command. Exclude heavy
+# local/generated directories from the source snapshot.
+sync:
+  include:
+    - tsconfig.json
+    - tsconfig.client.json
+    - tsconfig.server.json
+    - tsconfig.shared.json
+  exclude:
+    - node_modules/**
+    - .agents/**
+    - skills-lock.json
+    - .databricks/**
+    - deploy/**
+    - .smoke-test/**
+    - test-results/**
+    - playwright-report/**
+    - build/**
+    - data/exports/**
+
+variables:
+  postgres_branch:
+    description: Full Lakebase Postgres branch resource name. Obtain by running `databricks postgres list-branches projects/{project-id}`, select the desired item from the output array and use its .name value.
+  postgres_database:
+    description: Full Lakebase Postgres database resource name. Obtain by running `databricks postgres list-databases {branch-name}`, select the desired item from the output array and use its .name value. Requires the branch resource name.
+
+resources:
+  apps:
+    app:
+      name: "casino-floor"
+      description: "Casino floor simulation replay demo"
+      source_code_path: ./
+      # Uncomment to enable on behalf of user API scopes. Available scopes: sql, dashboards.genie, files.files, serving.serving-endpoints
+      # user_api_scopes:
+      #   - sql
+
+      # The resources which this app has access to.
+      resources:
+        - name: postgres
+          postgres:
+            branch: ${var.postgres_branch}
+            database: ${var.postgres_database}
+            permission: CAN_CONNECT_AND_CREATE
+
+targets:
+  default:
+    default: true
+    workspace:
+      host: https://devrel-shared.cloud.databricks.com
+
+    variables:
+      postgres_branch: projects/casino-floor-demo/branches/production
+      # Lakehouse Sync requires source tables to live in `databricks_postgres`
+      # (the default database). We use schema `app` to namespace within it.
+      postgres_database: projects/casino-floor-demo/branches/production/databases/databricks-postgres

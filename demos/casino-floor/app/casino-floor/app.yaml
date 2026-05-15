@@ -1,0 +1,6 @@
+command: ['node', './dist/server.js']
+env:
+  - name: NODE_ENV
+    value: production
+  - name: LAKEBASE_ENDPOINT
+    valueFrom: postgres
