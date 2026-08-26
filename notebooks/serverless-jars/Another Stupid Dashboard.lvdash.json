@@ -1,0 +1,203 @@
+{
+  "datasets": [
+    {
+      "name": "fc8f2a79",
+      "displayName": "stupid_dashboard",
+      "queryLines": [
+        "select * from stupid_dashboard"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "34e3bfb1",
+      "displayName": "Peak Data Storytelling",
+      "layout": [
+        {
+          "widget": {
+            "name": "d738a944",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fc8f2a79",
+                  "fields": [
+                    {
+                      "name": "x",
+                      "expression": "`x`"
+                    },
+                    {
+                      "name": "sum(Pink_1)",
+                      "expression": "SUM(`Pink_1`)"
+                    },
+                    {
+                      "name": "sum(red)",
+                      "expression": "SUM(`red`)"
+                    },
+                    {
+                      "name": "sum(D_blue_1)",
+                      "expression": "SUM(`D_blue_1`)"
+                    },
+                    {
+                      "name": "sum(L_Blue_1)",
+                      "expression": "SUM(`L_Blue_1`)"
+                    },
+                    {
+                      "name": "sum(White)",
+                      "expression": "SUM(`White`)"
+                    },
+                    {
+                      "name": "sum(Pink_2)",
+                      "expression": "SUM(`Pink_2`)"
+                    },
+                    {
+                      "name": "sum(D_blue_2)",
+                      "expression": "SUM(`D_blue_2`)"
+                    },
+                    {
+                      "name": "sum(L_Blue_2)",
+                      "expression": "SUM(`L_Blue_2`)"
+                    },
+                    {
+                      "name": "sum(D_Brown_1)",
+                      "expression": "SUM(`D_Brown_1`)"
+                    },
+                    {
+                      "name": "sum(Pink_3)",
+                      "expression": "SUM(`Pink_3`)"
+                    },
+                    {
+                      "name": "sum(D_Brown_2)",
+                      "expression": "SUM(`D_Brown_2`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "x",
+                  "axis": {
+                    "title": " "
+                  },
+                  "displayName": " ",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fields": [
+                    {
+                      "fieldName": "sum(Pink_1)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(red)",
+                      "displayName": "Making another single use dashboard"
+                    },
+                    {
+                      "fieldName": "sum(D_blue_1)",
+                      "displayName": "Me"
+                    },
+                    {
+                      "fieldName": "sum(L_Blue_1)",
+                      "displayName": "Dashboards with Genie Spaces"
+                    },
+                    {
+                      "fieldName": "sum(White)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(Pink_2)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(D_blue_2)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(L_Blue_2)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(D_Brown_1)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(Pink_3)",
+                      "displayName": " "
+                    },
+                    {
+                      "fieldName": "sum(D_Brown_2)",
+                      "displayName": " "
+                    }
+                  ],
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "min": 0,
+                      "max": 35
+                    }
+                  },
+                  "axis": {
+                    "title": " "
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "bottom"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "frame": {
+                "title": " ",
+                "showTitle": true,
+                "showDescription": false
+              },
+              "mark": {
+                "colors": [
+                  "#FCA4A1",
+                  "#FF3621",
+                  "#077A9D",
+                  "#8BCAE7",
+                  "#FFFFFF",
+                  "#FCA4A1",
+                  "#077A9D",
+                  "#8BCAE7",
+                  "#3A2518",
+                  "#FCA4A1",
+                  "#3A2518"
+                ],
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "enablementMode": "ENABLED"
+    },
+    "applyModeEnabled": false
+  }
+}
