@@ -128,9 +128,9 @@ Sandbox model calls route through the workspace's Foundation Model APIs over Uni
 
 ![Workspace AI Gateway Usage Analytics showing requests, token usage, latency, endpoints, models, and coding agents.](assets/ai-gateway-usage-analytics.png)
 
-Open a prepared Workspace AI Gateway Usage Analytics dashboard. The **Coding Agents** view can show requests, total tokens, latency, endpoints, destination models, and users across Claude Code and Codex activity.
+Open **AI Gateway**, use the dropdown in the top-right corner to select **Usage dashboard**, set the time-range filter to the current date, and open the **Coding Agents** tab. It can show requests, total tokens, latency, endpoints, destination models, and users across Claude Code and Codex activity.
 
-Use prepared historical data rather than waiting for the current run to appear. Treat cost analysis, inference tables, and unified traces as optional only when they are already configured and populated.
+If today's activity has not appeared yet, broaden the date range rather than waiting. Treat cost analysis, inference tables, and unified traces as optional only when they are already configured and populated.
 
 ## Optional: phone view
 
@@ -154,7 +154,7 @@ Expected result:
 READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
 ```
 
-If reset does not report **READY**, abandon that Sandbox and start a fresh session.
+This confirmation means the checkout is back at the initial demo state and can be reused. If the reset command errors or reports leftover changes, abandon that Sandbox and start a fresh session.
 
 ## OSS fallback
 
@@ -181,13 +181,12 @@ Once the demo is on `main`, remove the `--branch omnigent-conference-demo` line.
 | Problem | Response |
 |---|---|
 | Polly or Sandbox unavailable | Use the completed session or OSS fallback. |
-| `demos/omnigent` missing | Check the rehearsal branch; otherwise stop. |
 | Live work is slow | Continue with the completed session. |
-| Fewer than two worker vendors available | Do not claim cross-vendor review. |
+| Fewer than two worker vendors available | Explain that Polly supports cross-vendor review, and note that this workspace did not have enough agent vendors available to demonstrate it live. |
 | Changes is empty after Prompt 3 | Confirm `git status --short` lists the demo files, then reload once. |
 | Policy does not trigger | Use a fresh ordinary session for the policy module. |
-| Current AI Gateway row is absent | Show prepared historical usage. |
-| Reset is not READY | Abandon the Sandbox and start a fresh session. |
+| AI Gateway Usage dashboard is empty | Confirm the time-range filter is set to today, then broaden it to a prior date if needed. |
+| Reset command errors or leaves changes behind | Abandon the Sandbox and start a fresh session. |
 
 ## Features this project lets you discuss
 
