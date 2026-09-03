@@ -8,6 +8,7 @@ This repository contains examples from the Developer Relations team @ Databricks
 - **[`demos/`](demos/)** — Self-contained demo projects:
   - [Arxiv Paper Analysis](demos/arxiv)
   - [Bee Pollinator Health Analysis](demos/bee-pollinator)
+  - [Omnigent Multi-Agent Conference Demo](demos/omnigent)
 
 ## How to use
 

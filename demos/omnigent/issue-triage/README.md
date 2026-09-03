@@ -1,6 +1,6 @@
 # ghlite — Omnigent issue-triage demo
 
-> This public code example is intentionally naive. It is local worktree input for the Omnigent conference demo; see [`PILOT.md`](PILOT.md) before changing it.
+> This public code example is intentionally naive. It is local worktree input for the [Omnigent conference demo](../PRESENTER.md).
 
 A thin GitHub REST client I threw together to triage a repo's open issues —
 pull them, count them, group them by label. Zero frills on purpose: one

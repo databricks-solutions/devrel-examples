@@ -101,7 +101,7 @@ Then send Polly:
 I have fast-forwarded the reviewed branch into the starting branch. Run the full test suite under demos/omnigent/issue-triage. Then read the original starting commit from demos/omnigent/.demo-base and run git reset --mixed to that commit so the combined result remains as working-tree changes for the Omnigent Changes panel. Whether the tests pass or fail, perform the mixed reset and report git status --short. Do not push or modify origin.
 ```
 
-![Polly's reviewed branch handoff beside the combined pagination diff in the Omnigent file viewer.](assets/prompt-3-combined-diff.png)
+![Combined pagination changes in the Omnigent file viewer after Prompt 3.](assets/prompt-3-combined-diff.png)
 
 Open top-level **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. Reload the session once if the panel has not refreshed.
 
