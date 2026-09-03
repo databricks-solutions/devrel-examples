@@ -158,15 +158,19 @@ git merge --ff-only feat/ghlite-filter-prs
 cd demos/omnigent/issue-triage
 .venv/bin/python -m pytest -q
 cd ../../..
+
+BASE=$(cat demos/omnigent/.demo-base)
+git diff --stat "$BASE"...HEAD -- demos/omnigent/issue-triage
+git diff "$BASE"...HEAD -- demos/omnigent/issue-triage
 ```
 
 The final filtering branch is stacked on the pagination branch, so this one fast-forward lands both changes in dependency order. Nothing is pushed.
 
-Return to the top-level session, open **Changes**, and select **Show diff** on `ghlite/client.py` or `ghlite/issues.py`. The starting session now shows the combined change rather than leaving it visible only inside child worktrees.
+The terminal shows the combined diff from the recorded starting commit to the merged result. A manual terminal merge does not populate the top-level session's **Changes** panel; use each implementation child's **Changes → Show diff** for the visual per-task diffs.
 
 Suggested line:
 
-> “Polly delivers reviewed branches; the human decides what lands. Once I fast-forward the local starting branch, Omnigent shows the combined diff here.”
+> “Polly delivers reviewed branches; the human decides what lands. I can inspect each agent's diff in its child session, then fast-forward the combined result and verify it here.”
 
 ## Show a policy approval
 
