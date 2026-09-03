@@ -1,0 +1,458 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Glow for the gateway -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Soft shadow -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0a1628" flood-opacity="0.3"/>
+    </filter>
+    <!-- Arrow markers -->
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#F5A623"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E74C3C"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1ABC9C"/>
+    </marker>
+    <marker id="arrowCoral" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E8836B"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2ECC71"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#5DADE2"/>
+    </marker>
+    <marker id="arrowRose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E573A0"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9B59B6"/>
+    </marker>
+  </defs>
+
+  <!-- ==================== BACKGROUND ==================== -->
+  <rect width="1280" height="820" rx="16" fill="#0D1B2A"/>
+  <radialGradient id="bgGlow" cx="50%" cy="42%" r="58%">
+    <stop offset="0%" stop-color="#1B2838" stop-opacity="1"/>
+    <stop offset="100%" stop-color="#0D1B2A" stop-opacity="1"/>
+  </radialGradient>
+  <rect width="1280" height="820" rx="16" fill="url(#bgGlow)"/>
+
+  <!-- Decorative background particles -->
+  <circle cx="80" cy="90" r="2" fill="#F5A623" opacity="0.3"/>
+  <circle cx="240" cy="58" r="1.5" fill="#5DADE2" opacity="0.25"/>
+  <circle cx="380" cy="86" r="1" fill="#1ABC9C" opacity="0.3"/>
+  <circle cx="960" cy="72" r="2" fill="#E74C3C" opacity="0.2"/>
+  <circle cx="1110" cy="112" r="1.5" fill="#F5A623" opacity="0.25"/>
+  <circle cx="1190" cy="56" r="1" fill="#2ECC71" opacity="0.3"/>
+  <circle cx="150" cy="792" r="1.5" fill="#5DADE2" opacity="0.2"/>
+  <circle cx="660" cy="802" r="2" fill="#F5A623" opacity="0.15"/>
+  <circle cx="1080" cy="786" r="1" fill="#1ABC9C" opacity="0.25"/>
+
+  <!-- ==================== TITLE ==================== -->
+  <text x="640" y="48" text-anchor="middle" fill="#F0F4F8" font-size="24" font-weight="700" letter-spacing="1">
+    Governing Coding Agent Sprawl with Unity AI Gateway
+  </text>
+  <text x="640" y="72" text-anchor="middle" fill="#8899AA" font-size="12">
+    One gateway URL · three provider-specific governed model services · policy enforced per service
+  </text>
+  <line x1="330" y1="86" x2="950" y2="86" stroke="#F5A623" stroke-width="2" opacity="0.5"/>
+
+  <!-- ==================== CODING AGENTS (LEFT) ==================== -->
+  <text x="120" y="120" text-anchor="middle" fill="#8899AA" font-size="11" font-weight="600" letter-spacing="2">CODING AGENTS</text>
+
+  <!-- Agent: Cursor -->
+  <g filter="url(#shadow)" transform="translate(40, 130)">
+    <rect width="160" height="66" rx="14" fill="#1E3A5F"/>
+    <rect width="160" height="66" rx="14" fill="#F5A623" opacity="0.12"/>
+    <!-- Monitor icon -->
+    <rect x="16" y="15" width="28" height="21" rx="3" fill="none" stroke="#F5A623" stroke-width="2"/>
+    <line x1="26" y1="36" x2="38" y2="36" stroke="#F5A623" stroke-width="2"/>
+    <line x1="32" y1="36" x2="32" y2="42" stroke="#F5A623" stroke-width="2"/>
+    <line x1="24" y1="42" x2="40" y2="42" stroke="#F5A623" stroke-width="1.5"/>
+    <line x1="22" y1="21" x2="34" y2="21" stroke="#F5A623" stroke-width="1.5" opacity="0.6"/>
+    <line x1="22" y1="26" x2="30" y2="26" stroke="#F5A623" stroke-width="1.5" opacity="0.4"/>
+    <line x1="22" y1="31" x2="36" y2="31" stroke="#F5A623" stroke-width="1.5" opacity="0.6"/>
+    <text x="56" y="31" fill="#F5A623" font-size="15" font-weight="700">Cursor</text>
+    <text x="56" y="47" fill="#8899AA" font-size="8.5">IDE Agent · <tspan fill="#E8836B" font-weight="600">Claude</tspan></text>
+  </g>
+
+  <!-- Agent: Claude Code -->
+  <g filter="url(#shadow)" transform="translate(40, 208)">
+    <rect width="160" height="66" rx="14" fill="#1E3A5F"/>
+    <rect width="160" height="66" rx="14" fill="#E8836B" opacity="0.12"/>
+    <!-- Terminal icon -->
+    <rect x="16" y="15" width="28" height="21" rx="3" fill="none" stroke="#E8836B" stroke-width="2"/>
+    <polyline points="21,22 27,28 21,34" fill="none" stroke="#E8836B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="29" y1="34" x2="39" y2="34" stroke="#E8836B" stroke-width="2" stroke-linecap="round"/>
+    <text x="56" y="31" fill="#E8836B" font-size="14" font-weight="700">Claude Code</text>
+    <text x="56" y="47" fill="#8899AA" font-size="8.5">CLI Agent · <tspan fill="#E8836B" font-weight="600">Claude</tspan></text>
+  </g>
+
+  <!-- Agent: Codex CLI -->
+  <g filter="url(#shadow)" transform="translate(40, 286)">
+    <rect width="160" height="66" rx="14" fill="#1E3A5F"/>
+    <rect width="160" height="66" rx="14" fill="#2ECC71" opacity="0.12"/>
+    <!-- Code brackets icon -->
+    <text x="16" y="37" fill="#2ECC71" font-size="19" font-weight="300" font-family="monospace">&lt;/&gt;</text>
+    <text x="56" y="31" fill="#2ECC71" font-size="15" font-weight="700">Codex CLI</text>
+    <text x="56" y="47" fill="#8899AA" font-size="8.5">CLI Agent · <tspan fill="#2ECC71" font-weight="600">OpenAI</tspan></text>
+  </g>
+
+  <!-- Agent: Gemini CLI -->
+  <g filter="url(#shadow)" transform="translate(40, 364)">
+    <rect width="160" height="66" rx="14" fill="#1E3A5F"/>
+    <rect width="160" height="66" rx="14" fill="#5DADE2" opacity="0.12"/>
+    <!-- Diamond/gem icon -->
+    <polygon points="30,16 40,28 30,42 20,28" fill="none" stroke="#5DADE2" stroke-width="2"/>
+    <line x1="20" y1="28" x2="40" y2="28" stroke="#5DADE2" stroke-width="1.5" opacity="0.5"/>
+    <text x="56" y="31" fill="#5DADE2" font-size="14" font-weight="700">Gemini CLI</text>
+    <text x="56" y="47" fill="#8899AA" font-size="8.5">CLI Agent · <tspan fill="#5DADE2" font-weight="600">Gemini</tspan></text>
+  </g>
+
+  <!-- Agent: Pi -->
+  <g filter="url(#shadow)" transform="translate(40, 442)">
+    <rect width="160" height="66" rx="14" fill="#1E3A5F"/>
+    <rect width="160" height="66" rx="14" fill="#E573A0" opacity="0.12"/>
+    <!-- Pi symbol icon -->
+    <text x="30" y="38" fill="#E573A0" font-size="26" font-weight="400" font-family="serif" text-anchor="middle">&#x3C0;</text>
+    <text x="56" y="31" fill="#E573A0" font-size="15" font-weight="700">Pi</text>
+    <text x="56" y="47" fill="#8899AA" font-size="8.5">Coding Agent · <tspan fill="#5DADE2" font-weight="600">Gemini</tspan></text>
+  </g>
+
+  <!-- ==================== FLOW ARROWS (Agents → Gateway) ==================== -->
+  <path d="M 204,163 C 232,163 236,268 258,278" fill="none" stroke="#F5A623" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowOrange)" opacity="0.75"/>
+  <path d="M 204,241 C 232,241 236,290 258,300" fill="none" stroke="#E8836B" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowCoral)" opacity="0.75">
+    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 204,319 C 232,319 236,322 258,322" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowGreen)" opacity="0.75"/>
+  <path d="M 204,397 C 232,397 236,354 258,344" fill="none" stroke="#5DADE2" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowBlue)" opacity="0.75"/>
+  <path d="M 204,475 C 232,475 236,376 258,366" fill="none" stroke="#E573A0" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowRose)" opacity="0.75"/>
+
+  <!-- Protocol label on arrows -->
+  <g transform="translate(250, 150)">
+    <rect x="-48" y="-11" width="96" height="22" rx="11" fill="#0D1B2A" stroke="#F5A623" stroke-width="1" opacity="0.85"/>
+    <text x="0" y="4" text-anchor="middle" fill="#F5A623" font-size="9" font-weight="600">OpenAI-compatible</text>
+  </g>
+
+  <!-- ==================== AI GATEWAY (CENTER) ==================== -->
+  <g filter="url(#glow)" transform="translate(265, 190)">
+    <rect width="230" height="318" rx="20" fill="#162D50"/>
+    <rect width="230" height="318" rx="20" fill="#F5A623" opacity="0.06"/>
+    <rect x="2" y="2" width="226" height="314" rx="18" fill="none" stroke="#F5A623" stroke-width="1.5" opacity="0.4"/>
+
+    <!-- Gateway header -->
+    <rect x="0" y="0" width="230" height="52" rx="20" fill="#F5A623" opacity="0.15"/>
+    <rect x="0" y="32" width="230" height="20" fill="#F5A623" opacity="0.15"/>
+    <!-- Shield icon -->
+    <path d="M 26,15 L 26,31 C 26,39 34,43 34,43 C 34,43 42,39 42,31 L 42,15 L 34,11 Z" fill="none" stroke="#F5A623" stroke-width="2"/>
+    <polyline points="30,27 33,31 39,23" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/>
+    <text x="54" y="25" fill="#F5A623" font-size="13" font-weight="700">Unity AI Gateway</text>
+    <text x="54" y="40" fill="#8899AA" font-size="9.5">A single entry point</text>
+
+    <!-- The one URL -->
+    <g transform="translate(14, 62)">
+      <rect width="202" height="38" rx="8" fill="#F5A623" opacity="0.08"/>
+      <rect x="0.5" y="0.5" width="201" height="37" rx="8" fill="none" stroke="#F5A623" stroke-width="1" opacity="0.25"/>
+      <text x="10" y="16" fill="#8899AA" font-size="8" font-family="monospace">POST {host}/ai-gateway/</text>
+      <text x="10" y="29" fill="#C8D4E0" font-size="8" font-family="monospace">mlflow/v1/chat/completions</text>
+    </g>
+
+    <!-- Routing key -->
+    <g transform="translate(14, 108)">
+      <text x="0" y="8" fill="#8899AA" font-size="8" font-weight="600" letter-spacing="1">ROUTES ON</text>
+      <rect y="14" width="202" height="30" rx="8" fill="#9B59B6" opacity="0.14"/>
+      <rect x="0.5" y="14.5" width="201" height="29" rx="8" fill="none" stroke="#9B59B6" stroke-width="1" opacity="0.4"/>
+      <text x="10" y="33" fill="#C9A0DC" font-size="8.5" font-family="monospace">"model": "cat.schema.svc"</text>
+    </g>
+
+    <!-- Enforced per service -->
+    <g transform="translate(14, 164)">
+      <text x="0" y="8" fill="#8899AA" font-size="8" font-weight="600" letter-spacing="1">ENFORCED PER MODEL SERVICE</text>
+
+      <g transform="translate(0, 16)">
+        <rect width="202" height="26" rx="7" fill="#E74C3C" opacity="0.12"/>
+        <ellipse cx="18" cy="13" rx="8" ry="6" fill="none" stroke="#E74C3C" stroke-width="1.3"/>
+        <circle cx="18" cy="13" r="2.4" fill="#E74C3C" opacity="0.6"/>
+        <text x="34" y="17" fill="#E74C3C" font-size="10" font-weight="700">Guardrail policies</text>
+      </g>
+
+      <g transform="translate(0, 48)">
+        <rect width="202" height="26" rx="7" fill="#1ABC9C" opacity="0.12"/>
+        <rect x="11" y="6" width="16" height="13" rx="2" fill="none" stroke="#1ABC9C" stroke-width="1.3"/>
+        <line x1="11" y1="11" x2="27" y2="11" stroke="#1ABC9C" stroke-width="0.9"/>
+        <line x1="19" y1="6" x2="19" y2="19" stroke="#1ABC9C" stroke-width="0.9"/>
+        <text x="34" y="17" fill="#1ABC9C" font-size="10" font-weight="700">Inference table</text>
+      </g>
+
+      <g transform="translate(0, 80)">
+        <rect width="202" height="26" rx="7" fill="#5DADE2" opacity="0.12"/>
+        <rect x="11" y="14" width="4" height="6" rx="1" fill="#5DADE2" opacity="0.75"/>
+        <rect x="17" y="9" width="4" height="11" rx="1" fill="#5DADE2" opacity="0.75"/>
+        <rect x="23" y="5" width="4" height="15" rx="1" fill="#5DADE2" opacity="0.75"/>
+        <text x="34" y="17" fill="#5DADE2" font-size="10" font-weight="700">Usage tracking</text>
+      </g>
+
+      <g transform="translate(0, 112)">
+        <rect width="202" height="26" rx="7" fill="#F5A623" opacity="0.12"/>
+        <circle cx="19" cy="13" r="7.5" fill="none" stroke="#F5A623" stroke-width="1.3"/>
+        <line x1="19" y1="13" x2="19" y2="8" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="19" y1="13" x2="23" y2="15" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round"/>
+        <text x="34" y="17" fill="#F5A623" font-size="10" font-weight="700">Rate limits (QPM/TPM)</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== FLOW: Gateway → Model Services ==================== -->
+  <path d="M 499,270 C 524,270 536,201 564,201" fill="none" stroke="#E8836B" stroke-width="2.5" marker-end="url(#arrowCoral)" opacity="0.8"/>
+  <path d="M 499,340 C 524,340 536,345 564,345" fill="none" stroke="#2ECC71" stroke-width="2.5" marker-end="url(#arrowGreen)" opacity="0.8"/>
+  <path d="M 499,410 C 524,410 536,489 564,489" fill="none" stroke="#5DADE2" stroke-width="2.5" marker-end="url(#arrowBlue)" opacity="0.8"/>
+
+  <!-- ==================== GOVERNED MODEL SERVICES (RIGHT) ==================== -->
+  <text x="735" y="120" text-anchor="middle" fill="#8899AA" font-size="11" font-weight="600" letter-spacing="2">GOVERNED MODEL SERVICES</text>
+  <text x="735" y="134" text-anchor="middle" fill="#667788" font-size="9">each a Unity Catalog securable with its own policies, table &amp; limits</text>
+
+  <!-- Model Service: Claude -->
+  <g filter="url(#shadow)" transform="translate(570, 138)">
+    <rect width="330" height="126" rx="16" fill="#1E3A5F"/>
+    <rect width="330" height="126" rx="16" fill="#E8836B" opacity="0.1"/>
+    <rect x="1.5" y="1.5" width="327" height="123" rx="15" fill="none" stroke="#E8836B" stroke-width="1.2" opacity="0.45"/>
+    <text x="16" y="26" fill="#E8836B" font-size="15" font-weight="700">Claude</text>
+    <text x="316" y="25" text-anchor="end" fill="#667788" font-size="8" font-weight="600" letter-spacing="1">MODEL SERVICE</text>
+    <text x="16" y="43" fill="#8899AA" font-size="8.5" font-family="monospace">catalog.schema.claude-service</text>
+    <text x="16" y="58" fill="#E8836B" font-size="8.5" font-family="monospace" opacity="0.9">&#8594; databricks-claude-opus-4-8</text>
+    <!-- Policy chips -->
+    <g transform="translate(16, 68)">
+      <rect width="58" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="29" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">PII</text>
+      <rect x="64" width="74" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="101" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Jailbreak</text>
+      <rect x="146" width="66" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="179" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Unsafe</text>
+    </g>
+    <!-- Table + limits -->
+    <g transform="translate(16, 96)">
+      <rect width="152" height="22" rx="7" fill="#1ABC9C" opacity="0.12"/>
+      <text x="8" y="15" fill="#1ABC9C" font-size="8" font-family="monospace">claude-service_payload</text>
+      <rect x="160" width="138" height="22" rx="7" fill="#F5A623" opacity="0.12"/>
+      <text x="229" y="15" text-anchor="middle" fill="#F5A623" font-size="8.5">QPM 8 · TPM 2000</text>
+    </g>
+  </g>
+
+  <!-- Model Service: OpenAI -->
+  <g filter="url(#shadow)" transform="translate(570, 282)">
+    <rect width="330" height="126" rx="16" fill="#1E3A5F"/>
+    <rect width="330" height="126" rx="16" fill="#2ECC71" opacity="0.1"/>
+    <rect x="1.5" y="1.5" width="327" height="123" rx="15" fill="none" stroke="#2ECC71" stroke-width="1.2" opacity="0.45"/>
+    <text x="16" y="26" fill="#2ECC71" font-size="15" font-weight="700">OpenAI</text>
+    <text x="316" y="25" text-anchor="end" fill="#667788" font-size="8" font-weight="600" letter-spacing="1">MODEL SERVICE</text>
+    <text x="16" y="43" fill="#8899AA" font-size="8.5" font-family="monospace">catalog.schema.openai-service</text>
+    <text x="16" y="58" fill="#2ECC71" font-size="8.5" font-family="monospace" opacity="0.9">&#8594; databricks-gpt-5-6-sol</text>
+    <g transform="translate(16, 68)">
+      <rect width="58" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="29" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">PII</text>
+      <rect x="64" width="74" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="101" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Jailbreak</text>
+      <rect x="146" width="66" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="179" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Unsafe</text>
+    </g>
+    <g transform="translate(16, 96)">
+      <rect width="152" height="22" rx="7" fill="#1ABC9C" opacity="0.12"/>
+      <text x="8" y="15" fill="#1ABC9C" font-size="8" font-family="monospace">openai-service_payload</text>
+      <rect x="160" width="138" height="22" rx="7" fill="#F5A623" opacity="0.12"/>
+      <text x="229" y="15" text-anchor="middle" fill="#F5A623" font-size="8.5">QPM 8 · TPM 2000</text>
+    </g>
+  </g>
+
+  <!-- Model Service: Gemini -->
+  <g filter="url(#shadow)" transform="translate(570, 426)">
+    <rect width="330" height="126" rx="16" fill="#1E3A5F"/>
+    <rect width="330" height="126" rx="16" fill="#5DADE2" opacity="0.1"/>
+    <rect x="1.5" y="1.5" width="327" height="123" rx="15" fill="none" stroke="#5DADE2" stroke-width="1.2" opacity="0.45"/>
+    <text x="16" y="26" fill="#5DADE2" font-size="15" font-weight="700">Gemini</text>
+    <text x="316" y="25" text-anchor="end" fill="#667788" font-size="8" font-weight="600" letter-spacing="1">MODEL SERVICE</text>
+    <text x="16" y="43" fill="#8899AA" font-size="8.5" font-family="monospace">catalog.schema.gemini-service</text>
+    <text x="16" y="58" fill="#5DADE2" font-size="8.5" font-family="monospace" opacity="0.9">&#8594; databricks-gemini-3-6-flash</text>
+    <g transform="translate(16, 68)">
+      <rect width="58" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="29" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">PII</text>
+      <rect x="64" width="74" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="101" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Jailbreak</text>
+      <rect x="146" width="66" height="22" rx="7" fill="#E74C3C" opacity="0.16"/>
+      <text x="179" y="15" text-anchor="middle" fill="#E8938B" font-size="9" font-weight="600">Unsafe</text>
+    </g>
+    <g transform="translate(16, 96)">
+      <rect width="152" height="22" rx="7" fill="#1ABC9C" opacity="0.12"/>
+      <text x="8" y="15" fill="#1ABC9C" font-size="8" font-family="monospace">gemini-service_payload</text>
+      <rect x="160" width="138" height="22" rx="7" fill="#F5A623" opacity="0.12"/>
+      <text x="229" y="15" text-anchor="middle" fill="#F5A623" font-size="8.5">QPM 8 · TPM 2000</text>
+    </g>
+  </g>
+
+  <!-- Response arrows back to the gateway -->
+  <path d="M 566,232 C 540,232 528,290 502,296" fill="none" stroke="#9B59B6" stroke-width="1.6" stroke-dasharray="5,3" opacity="0.45"/>
+  <path d="M 566,520 C 540,520 528,392 502,386" fill="none" stroke="#9B59B6" stroke-width="1.6" stroke-dasharray="5,3" opacity="0.45"/>
+
+  <!-- ==================== BLOCKED PATH ==================== -->
+  <path d="M 320,512 C 320,548 288,552 212,540" fill="none" stroke="#E74C3C" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowRed)" opacity="0.65"/>
+  <g transform="translate(392, 528)">
+    <rect x="-96" y="-12" width="192" height="24" rx="12" fill="#0D1B2A" stroke="#E74C3C" stroke-width="1" opacity="0.9"/>
+    <text x="0" y="4" text-anchor="middle" fill="#E74C3C" font-size="9" font-weight="600">HTTP 200 · policy action = deny</text>
+  </g>
+  <text x="392" y="555" text-anchor="middle" fill="#667788" font-size="8.5">denied before the model — never reaches it, never logged to Delta</text>
+
+  <!-- ==================== OBSERVABILITY LAYER (BOTTOM) ==================== -->
+  <rect x="40" y="578" width="1200" height="212" rx="18" fill="#111F33" opacity="0.7"/>
+  <text x="70" y="604" fill="#8899AA" font-size="11" font-weight="600" letter-spacing="2">OBSERVABILITY &amp; AUDIT</text>
+
+  <!-- LOG arrow: model services → Unity Catalog inference tables -->
+  <path d="M 640,558 C 640,596 400,586 262,620" fill="none" stroke="#1ABC9C" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#arrowTeal)" opacity="0.75"/>
+  <g transform="translate(470, 594)">
+    <rect x="-24" y="-11" width="48" height="21" rx="10" fill="#0D1B2A" stroke="#1ABC9C" stroke-width="1" opacity="0.9"/>
+    <text x="0" y="4" text-anchor="middle" fill="#1ABC9C" font-size="9" font-weight="600">LOG</text>
+  </g>
+
+  <!-- TRACE arrow: every call through the gateway → MLflow Tracing -->
+  <path d="M 700,560 C 700,600 660,600 660,620" fill="none" stroke="#5DADE2" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#arrowBlue)" opacity="0.8"/>
+  <g transform="translate(742, 592)">
+    <rect x="-30" y="-11" width="60" height="21" rx="10" fill="#0D1B2A" stroke="#5DADE2" stroke-width="1" opacity="0.9"/>
+    <text x="0" y="4" text-anchor="middle" fill="#5DADE2" font-size="9" font-weight="600">TRACE</text>
+  </g>
+
+  <!-- Unity Catalog -->
+  <g filter="url(#shadow)" transform="translate(70, 624)">
+    <rect width="360" height="146" rx="14" fill="#1E3A5F"/>
+    <rect width="360" height="146" rx="14" fill="#1ABC9C" opacity="0.08"/>
+    <!-- Cylinder icon -->
+    <ellipse cx="30" cy="24" rx="13" ry="5" fill="none" stroke="#1ABC9C" stroke-width="1.6"/>
+    <line x1="17" y1="24" x2="17" y2="40" stroke="#1ABC9C" stroke-width="1.6"/>
+    <line x1="43" y1="24" x2="43" y2="40" stroke="#1ABC9C" stroke-width="1.6"/>
+    <ellipse cx="30" cy="40" rx="13" ry="5" fill="none" stroke="#1ABC9C" stroke-width="1.6"/>
+    <text x="56" y="28" fill="#1ABC9C" font-size="13" font-weight="700">Unity Catalog</text>
+    <text x="56" y="44" fill="#8899AA" font-size="9.5">One inference table per model service</text>
+    <!-- Sample rows -->
+    <g transform="translate(14, 58)">
+      <rect width="332" height="14" rx="3" fill="#1ABC9C" opacity="0.1"/>
+      <text x="8" y="10" fill="#8899AA" font-size="8" font-family="monospace">request_time | status | agent    | provider</text>
+    </g>
+    <g transform="translate(14, 75)">
+      <rect width="332" height="14" rx="3" fill="#1ABC9C" opacity="0.05"/>
+      <text x="8" y="10" fill="#667788" font-size="8" font-family="monospace">2026-08-05   | 200    | cursor   | claude</text>
+    </g>
+    <g transform="translate(14, 92)">
+      <rect width="332" height="14" rx="3" fill="#1ABC9C" opacity="0.05"/>
+      <text x="8" y="10" fill="#667788" font-size="8" font-family="monospace">2026-08-05   | 200    | codex    | openai</text>
+    </g>
+    <g transform="translate(14, 109)">
+      <rect width="332" height="14" rx="3" fill="#1ABC9C" opacity="0.05"/>
+      <text x="8" y="10" fill="#667788" font-size="8" font-family="monospace">2026-08-05   | 200    | pi       | gemini</text>
+    </g>
+    <text x="14" y="138" fill="#667788" font-size="8">Model invocations only — the audit trail of what was sent &amp; spent</text>
+  </g>
+
+  <!-- MLflow Tracing -->
+  <g filter="url(#shadow)" transform="translate(460, 624)">
+    <rect width="360" height="146" rx="14" fill="#1E3A5F"/>
+    <rect width="360" height="146" rx="14" fill="#5DADE2" opacity="0.08"/>
+    <!-- Trace spans icon -->
+    <line x1="20" y1="20" x2="20" y2="48" stroke="#5DADE2" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="4" fill="#5DADE2" opacity="0.5"/>
+    <line x1="24" y1="20" x2="40" y2="20" stroke="#5DADE2" stroke-width="6" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="20" cy="32" r="4" fill="#F5A623" opacity="0.5"/>
+    <line x1="24" y1="32" x2="36" y2="32" stroke="#F5A623" stroke-width="6" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="20" cy="44" r="4" fill="#2ECC71" opacity="0.5"/>
+    <line x1="24" y1="44" x2="44" y2="44" stroke="#2ECC71" stroke-width="6" stroke-linecap="round" opacity="0.3"/>
+    <text x="56" y="28" fill="#5DADE2" font-size="13" font-weight="700">MLflow Tracing</text>
+    <text x="56" y="44" fill="#8899AA" font-size="9.5">Per-agent, per-provider trace spans</text>
+    <!-- Trace tags -->
+    <g transform="translate(14, 58)">
+      <rect width="332" height="50" rx="6" fill="#5DADE2" opacity="0.06"/>
+      <text x="8" y="14" fill="#8899AA" font-size="8.5">Every trace tagged:</text>
+      <text x="8" y="28" fill="#C8D4E0" font-size="8" font-family="monospace">agent · provider · model_service</text>
+      <text x="8" y="43" fill="#667788" font-size="8.5">&#8594; Latency, tokens, policy verdicts, errors</text>
+    </g>
+    <text x="14" y="126" fill="#667788" font-size="8">Traces keep the blocking evidence the inference table cannot</text>
+  </g>
+
+  <!-- Genie / Query & Analyze -->
+  <g filter="url(#shadow)" transform="translate(850, 624)">
+    <rect width="360" height="146" rx="14" fill="#1E3A5F"/>
+    <rect width="360" height="146" rx="14" fill="#F5A623" opacity="0.08"/>
+    <!-- Genie sparkle + magnifier icon -->
+    <path d="M 26,14 L 29,23 L 38,26 L 29,29 L 26,38 L 23,29 L 14,26 L 23,23 Z" fill="none" stroke="#F5A623" stroke-width="1.5"/>
+    <circle cx="36" cy="40" r="6" fill="none" stroke="#F5A623" stroke-width="1.5"/>
+    <line x1="40" y1="44" x2="45" y2="49" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/>
+    <text x="56" y="28" fill="#F5A623" font-size="13" font-weight="700">Ask Genie</text>
+    <text x="56" y="44" fill="#8899AA" font-size="9.5">Plain English over the governed data</text>
+    <g transform="translate(14, 58)">
+      <rect width="332" height="14" rx="3" fill="#F5A623" opacity="0.08"/>
+      <text x="8" y="10" fill="#8899AA" font-size="8" font-family="monospace">Which provider spent the most tokens?</text>
+    </g>
+    <g transform="translate(14, 77)">
+      <rect width="332" height="14" rx="3" fill="#5DADE2" opacity="0.07"/>
+      <text x="8" y="10" fill="#8899AA" font-size="8" font-family="monospace">Requests per agent, per hour</text>
+    </g>
+    <g transform="translate(14, 96)">
+      <rect width="332" height="14" rx="3" fill="#2ECC71" opacity="0.07"/>
+      <text x="8" y="10" fill="#8899AA" font-size="8" font-family="monospace">Latency: allowed vs. refused</text>
+    </g>
+    <text x="14" y="132" fill="#667788" font-size="8">3 payload tables + system.ai_gateway.usage (chargeback)</text>
+  </g>
+
+  <!-- ==================== WHAT'S NEXT (RIGHT SIDE) ==================== -->
+  <g transform="translate(920, 148)">
+    <text x="0" y="0" fill="#8899AA" font-size="10" font-weight="600" letter-spacing="1.5">WHAT'S NEXT</text>
+
+    <g transform="translate(0, 12)">
+      <rect width="200" height="32" rx="8" fill="#1E3A5F" opacity="0.5"/>
+      <text x="12" y="21" fill="#E74C3C" font-size="11" opacity="0.35" font-family="monospace">!kw</text>
+      <text x="46" y="20" fill="#667788" font-size="11">Keyword Blocklist</text>
+    </g>
+
+    <g transform="translate(0, 52)">
+      <rect width="200" height="32" rx="8" fill="#1E3A5F" opacity="0.5"/>
+      <circle cx="20" cy="16" r="6" fill="none" stroke="#5DADE2" stroke-width="1.4" opacity="0.35"/>
+      <text x="46" y="20" fill="#667788" font-size="11">Topic Filtering</text>
+    </g>
+
+    <g transform="translate(0, 92)">
+      <rect width="200" height="32" rx="8" fill="#1E3A5F" opacity="0.5"/>
+      <path d="M 20,8 L 20,24 M 12,16 L 28,16" stroke="#F5A623" stroke-width="1.6" opacity="0.35" stroke-linecap="round"/>
+      <text x="46" y="20" fill="#667788" font-size="11">Custom Guardrails</text>
+    </g>
+
+    <g transform="translate(0, 132)">
+      <rect width="200" height="32" rx="8" fill="#1E3A5F" opacity="0.5"/>
+      <text x="12" y="22" fill="#9B59B6" font-size="14" opacity="0.3">&#x1F4CA;</text>
+      <text x="46" y="20" fill="#667788" font-size="11">Visualizations</text>
+    </g>
+  </g>
+
+  <!-- ==================== DATA FLOW LEGEND ==================== -->
+  <g transform="translate(950, 372)">
+    <rect x="-30" y="-22" width="270" height="190" rx="10" fill="#111F33" opacity="0.85"/>
+    <text x="-20" y="-4" fill="#8899AA" font-size="10" font-weight="600" letter-spacing="1.5">DATA FLOW</text>
+    <line x1="-20" y1="16" x2="14" y2="16" stroke="#F5A623" stroke-width="2.5" stroke-dasharray="6,4"/>
+    <text x="24" y="20" fill="#F5A623" font-size="9.5">Agent &#8594; Gateway (one URL)</text>
+    <line x1="-20" y1="42" x2="14" y2="42" stroke="#2ECC71" stroke-width="2.5"/>
+    <text x="24" y="46" fill="#2ECC71" font-size="9.5">Routed by <tspan font-family="monospace">model</tspan> &#8594; service</text>
+    <line x1="-20" y1="68" x2="14" y2="68" stroke="#9B59B6" stroke-width="1.8" stroke-dasharray="5,3"/>
+    <text x="24" y="72" fill="#9B59B6" font-size="9.5">Model response</text>
+    <line x1="-20" y1="94" x2="14" y2="94" stroke="#E74C3C" stroke-width="2" stroke-dasharray="5,3"/>
+    <text x="24" y="98" fill="#E74C3C" font-size="9.5">Denied (HTTP 200 + policy)</text>
+    <line x1="-20" y1="120" x2="14" y2="120" stroke="#1ABC9C" stroke-width="2.5" stroke-dasharray="6,4"/>
+    <text x="24" y="124" fill="#1ABC9C" font-size="9.5">Logged to Delta</text>
+    <line x1="-20" y1="146" x2="14" y2="146" stroke="#5DADE2" stroke-width="2.5" stroke-dasharray="6,4"/>
+    <text x="24" y="150" fill="#5DADE2" font-size="9.5">Traced to MLflow</text>
+  </g>
+
+</svg>

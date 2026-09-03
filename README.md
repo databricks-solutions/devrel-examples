@@ -8,6 +8,7 @@ This repository contains examples from the Developer Relations team @ Databricks
 - **[`demos/`](demos/)** — Self-contained demo projects:
   - [Arxiv Paper Analysis](demos/arxiv)
   - [Bee Pollinator Health Analysis](demos/bee-pollinator)
+  - [Governing Coding Agent Sprawl with Unity AI Gateway](demos/unity_ai_gateway_governance)
 
 ## How to use
 
