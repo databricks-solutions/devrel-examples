@@ -25,6 +25,26 @@ def refuse(message: str) -> None:
     raise SystemExit(1)
 
 
+def is_demo_branch(branch: str) -> bool:
+    return branch in TASK_BRANCHES or branch.startswith(BRANCH_PREFIXES)
+
+
+def listed_worktrees() -> list[tuple[Path, str | None]]:
+    records: list[tuple[Path, str | None]] = []
+    current_path: Path | None = None
+    current_branch: str | None = None
+    for line in [*run("git", "worktree", "list", "--porcelain").stdout.splitlines(), ""]:
+        if line.startswith("worktree "):
+            current_path = Path(line.removeprefix("worktree ")).resolve()
+        elif line.startswith("branch refs/heads/"):
+            current_branch = line.removeprefix("branch refs/heads/")
+        elif not line and current_path is not None:
+            records.append((current_path, current_branch))
+            current_path = None
+            current_branch = None
+    return records
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reset local Omnigent demo worktrees")
     parser.add_argument("--yes", action="store_true")
@@ -50,17 +70,21 @@ def main() -> None:
     }
     if origin not in expected:
         refuse(f"unexpected origin: {origin}")
-    if run("git", "status", "--porcelain", "--untracked-files=no").stdout.strip():
-        refuse("starting checkout has tracked modifications; inspect them before reset")
+    if run("git", "status", "--porcelain").stdout.strip():
+        refuse("starting checkout has modified or untracked files; inspect them before reset")
 
-    entries = run("git", "worktree", "list", "--porcelain").stdout.splitlines()
-    worktrees = [Path(line.removeprefix("worktree ")).resolve() for line in entries if line.startswith("worktree ")]
-    for path in worktrees:
+    worktrees = listed_worktrees()
+    for path, task_branch in worktrees:
         if path == ROOT.resolve():
             continue
         if path != WORKTREE_ROOT and WORKTREE_ROOT not in path.parents:
             refuse(f"worktree is outside {WORKTREE_ROOT}: {path}")
-        print(f"Removing worktree {path}")
+        if task_branch is None or not is_demo_branch(task_branch):
+            refuse(f"refusing to remove unknown worktree {path} on branch {task_branch!r}")
+    for path, task_branch in worktrees:
+        if path == ROOT.resolve():
+            continue
+        print(f"Removing worktree {path} ({task_branch})")
         run("git", "worktree", "remove", "--force", str(path))
     run("git", "worktree", "prune")
 
@@ -69,7 +93,7 @@ def main() -> None:
 
     branches = run("git", "for-each-ref", "--format=%(refname:short)", "refs/heads/").stdout.splitlines()
     for task_branch in branches:
-        if task_branch in TASK_BRANCHES or task_branch.startswith(BRANCH_PREFIXES):
+        if is_demo_branch(task_branch):
             print(f"Deleting branch {task_branch}")
             run("git", "branch", "-D", task_branch)
 
@@ -89,8 +113,8 @@ def main() -> None:
     tests = subprocess.run([str(python), "-m", "pytest", "-q"], cwd=DEMO / "issue-triage")
     if tests.returncode:
         refuse("seed tests failed after cleanup")
-    if run("git", "status", "--porcelain", "--untracked-files=no").stdout.strip():
-        refuse("starting checkout is not clean after cleanup")
+    if run("git", "status", "--porcelain").stdout.strip():
+        refuse("starting checkout still has modified or untracked files after cleanup")
     print("READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass")
 
 
