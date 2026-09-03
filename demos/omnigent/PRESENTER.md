@@ -69,17 +69,16 @@ The public repository supplies the code. This demo does not require GitHub crede
 ```text
 Prepare this workspace for the Omnigent issue-triage demo.
 
-Verify that demos/omnigent exists, then run the documented setup for
-demos/omnigent/issue-triage. Do not modify git remotes.
+Verify that demos/omnigent exists, then run the documented setup for demos/omnigent/issue-triage. Do not modify git remotes.
 
-Run the naive issue-triage client against the public omnigent-ai/omnigent
-repository. Report the item count and top labels exactly as observed. Do not
-change source code or tests. Stop after reporting READY or a specific blocker.
+Run the naive issue-triage client against the public omnigent-ai/omnigent repository. Report the item count and top labels exactly as observed. Do not change source code or tests. Stop after reporting READY or a specific blocker.
 ```
 
 ### What to point out
 
-The client normally reports exactly **30** items because it reads one default API page. Labels associated with pull requests can appear in what it calls an issue summary. Exact labels and repository totals change over time; the stable signal is “one page and mixed object types,” not a memorized count beyond 30.
+The demo repository contains a deliberately thin Python CLI that calls GitHub's public Issues API, counts a repository's open issues, and groups them by label. It worked against a small repository. Against the active Omnigent repository, its hidden assumptions become obvious—and Polly has a concrete problem to investigate and fix.
+
+The CLI normally reports exactly **30** items because it reads one default API page. Labels associated with pull requests can appear in what it calls an issue summary. Exact labels and repository totals change over time; the stable signal is “one page and mixed object types,” not a memorized count beyond 30.
 
 Suggested line:
 
@@ -97,15 +96,10 @@ Use this menu privately; do not read it as a script.
 - **Databricks integration** → show the prepared AI Gateway usage view.
 - **Remote collaboration** → optionally open the same session on your phone.
 
-## Prompt 1 — investigate with multiple agents
+## Prompt 1 — ask Polly to triage the problem
 
 ```text
-Use multiple read-only agents to investigate why this client produces a
-misleading result for a large public repository.
-
-Have one agent trace the client code and another independently check the live
-GitHub API behavior. Synthesize their evidence into a dependency-aware fix
-plan. Do not edit code or tests yet.
+/investigate This GitHub issue-triage client worked on a small repository, but its output for omnigent-ai/omnigent looks wrong. Use multiple read-only agents to find the problems, report evidence from the code and live GitHub API, and recommend the order in which they should be fixed. Do not edit code or tests yet.
 ```
 
 ### Key narrative
@@ -127,24 +121,12 @@ Expected findings:
 - Pagination changes the client interface used by issue listing, so pagination must be completed first.
 - Pull-request filtering should be implemented from the reviewed pagination result, not in parallel from the original seed.
 
-## Prompt 2 — implement and independently review
+## Prompt 2 — fix what Polly found
 
 ```text
-Implement the dependency-aware plan, working only under
-demos/omnigent/issue-triage.
+Implement the issues from your investigation, working only under demos/omnigent/issue-triage. Respect the dependency order you identified, use separate local worktrees where appropriate, and add focused regression tests. Keep all work local: do not push, open a pull request, or merge into the starting branch.
 
-First implement Link-header pagination with focused regression tests in its own
-local worktree. Run the exact tests and, if Polly supports local diff review,
-have a different-vendor agent review it before continuing.
-
-Then create the pull-request-filtering worktree from the pagination result.
-Exclude objects containing the pull_request key and add focused regression
-tests. Keep the work local: do not push, open a pull request, or merge into the
-starting branch.
-
-If Polly's standard review flow requires a pull request, stop after the local
-worktree changes and passing tests. Report that limitation clearly; do not try
-to configure GitHub credentials.
+If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials.
 ```
 
 This can take longer than a booth conversation. Let it run while discussing the graph and children. If the attendee wants completed artifacts immediately, open your completed rehearsal session.
