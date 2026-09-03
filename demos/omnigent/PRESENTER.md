@@ -43,6 +43,8 @@ Immediately before booth duty:
 
 In workspace/omnigent:
 
+![New Omnigent session configured with Polly, Databricks Sandbox, the devrel-examples repository, and the omnigent-conference-demo branch.](assets/start-fresh-live-session.png)
+
 1. Select **New session**.
 2. Select agent **Polly**.
 3. Select host **Sandbox**.
