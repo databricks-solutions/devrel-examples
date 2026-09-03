@@ -8,6 +8,8 @@ Omnigent is a meta-harness for the coding agents teams already use. It provides 
 
 The demo uses a deliberately thin Python CLI that calls GitHub's public Issues API, counts open issues, and groups them by label. It worked against a small repository. Against the active `omnigent-ai/omnigent` repository, it stops after GitHub's first 30 results instead of fetching every page—and it mistakenly counts pull requests as issues, producing the wrong total and misleading label rankings. Polly investigates the discrepancy, coordinates the fixes, and leaves reviewed local branches for the human.
 
+Read [Meta-Harness: the Missing Layer Above Claude Code, Codex, and Pi](https://omnigent.ai/blog/meta-harness-missing-layer) for the full narrative behind this scenario.
+
 The most useful surfaces to show are the agent graph, a child session, the combined code diff, a policy approval, and AI Gateway usage. Choose among them based on the conversation.
 
 ## Before the event
