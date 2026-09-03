@@ -150,11 +150,13 @@ Suggested lines:
 
 ## Prompt 3 — expose the combined diff
 
-Once Polly reports that `feat/ghlite-filter-prs` is ready, run the human-owned merge in the top-level terminal:
+Once Polly reports that `feat/ghlite-filter-prs` is ready, open a terminal in the top-level Omnigent session and run:
 
 ```bash
 git merge --ff-only feat/ghlite-filter-prs
 ```
+
+Do this quietly rather than talking through it. It is a short workaround for Polly's deliberate no-merge boundary and the Changes panel's working-tree behavior, not a demo beat.
 
 Then send Polly:
 
@@ -165,10 +167,6 @@ I have fast-forwarded the reviewed branch into the starting branch. Run the full
 The reviewed commits remain on `feat/ghlite-filter-prs`, while their combined content remains in the top-level working tree for the Changes panel.
 
 Open **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
-
-Suggested line:
-
-> “Polly delivers reviewed branches; the human decides what lands. I verified the combined commit, then exposed that result as a working-tree diff so we can inspect it here.”
 
 ## Show a policy approval
 
