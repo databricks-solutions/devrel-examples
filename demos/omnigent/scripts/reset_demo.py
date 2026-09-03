@@ -14,6 +14,7 @@ BRANCH_PREFIXES = ("polly/", "local-polly/")
 TASK_BRANCHES = {"feat/ghlite-pagination", "feat/ghlite-filter-prs"}
 BASE_FILE = DEMO / ".demo-base"
 BRANCH_FILE = DEMO / ".demo-branch"
+DEMO_CHANGE_ROOT = "demos/omnigent/issue-triage/"
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -27,6 +28,16 @@ def refuse(message: str) -> None:
 
 def is_demo_branch(branch: str) -> bool:
     return branch in TASK_BRANCHES or branch.startswith(BRANCH_PREFIXES)
+
+
+def changed_paths() -> list[str]:
+    paths: list[str] = []
+    for line in run("git", "status", "--porcelain", "--untracked-files=all").stdout.splitlines():
+        path = line[3:]
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        paths.append(path.strip('"'))
+    return paths
 
 
 def listed_worktrees() -> list[tuple[Path, str | None]]:
@@ -70,8 +81,12 @@ def main() -> None:
     }
     if origin not in expected:
         refuse(f"unexpected origin: {origin}")
-    if run("git", "status", "--porcelain").stdout.strip():
-        refuse("starting checkout has modified or untracked files; inspect them before reset")
+    changes = changed_paths()
+    unrelated = [path for path in changes if not path.startswith(DEMO_CHANGE_ROOT)]
+    if unrelated:
+        refuse(f"refusing to discard changes outside {DEMO_CHANGE_ROOT}: {unrelated}")
+    for path in changes:
+        print(f"Discarding demo change {path}")
 
     worktrees = listed_worktrees()
     for path, task_branch in worktrees:
@@ -90,6 +105,7 @@ def main() -> None:
 
     print(f"Restoring {starting_branch} to {base_sha[:12]}")
     run("git", "reset", "--hard", base_sha)
+    run("git", "clean", "-fd", "--", DEMO_CHANGE_ROOT)
 
     branches = run("git", "for-each-ref", "--format=%(refname:short)", "refs/heads/").stdout.splitlines()
     for task_branch in branches:

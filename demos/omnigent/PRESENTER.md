@@ -160,17 +160,19 @@ cd demos/omnigent/issue-triage
 cd ../../..
 
 BASE=$(cat demos/omnigent/.demo-base)
-git diff --stat "$BASE"...HEAD -- demos/omnigent/issue-triage
-git diff "$BASE"...HEAD -- demos/omnigent/issue-triage
+git reset --mixed "$BASE"
+git status --short
 ```
 
 The final filtering branch is stacked on the pagination branch, so this one fast-forward lands both changes in dependency order. Nothing is pushed.
 
-The terminal shows the combined diff from the recorded starting commit to the merged result. A manual terminal merge does not populate the top-level session's **Changes** panel; use each implementation child's **Changes → Show diff** for the visual per-task diffs.
+The fast-forward first verifies the real combined commit and tests. The mixed reset then returns the starting branch pointer to its recorded base while leaving the combined result in the working tree. Omnigent's Git-backed **Changes** panel reads that working-tree state, so the five combined changed files should now appear in the top-level session. The reviewed commits remain on `feat/ghlite-filter-prs`.
+
+Return to the top-level session, open **Changes**, and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
 
 Suggested line:
 
-> “Polly delivers reviewed branches; the human decides what lands. I can inspect each agent's diff in its child session, then fast-forward the combined result and verify it here.”
+> “Polly delivers reviewed branches; the human decides what lands. I verified the combined commit, then exposed that result as a working-tree diff so we can inspect it here.”
 
 ## Show a policy approval
 
@@ -227,10 +229,10 @@ In the current top-level session, send:
 Reset this demo workspace for the next attendee.
 
 Run demos/omnigent/scripts/reset_demo.py --yes using the issue-triage virtual
-environment. Confirm that Polly worktrees and local task branches are gone,
-runtime artifacts are removed, the starting branch is clean, and the seed tests
-pass. Preserve the public origin remote. Report READY or the exact remaining
-state.
+environment. Confirm that the displayed working-tree changes are discarded,
+Polly worktrees and local task branches are gone, runtime artifacts are removed,
+the starting branch is clean, and the seed tests pass. Preserve the public
+origin remote. Report READY or the exact remaining state.
 ```
 
 Expected result:
