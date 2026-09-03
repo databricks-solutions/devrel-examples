@@ -43,7 +43,7 @@ Immediately before booth duty:
 
 In workspace/omnigent:
 
-![Prompt 0 ready to submit in a new Omnigent session configured with Polly, Databricks Sandbox, and the devrel-examples demo branch.](assets/start-fresh-live-session.png)
+![Prompt 0 ready to submit with Polly and Databricks Sandbox while the devrel-examples repository dialog is open.](assets/start-fresh-live-session.png)
 
 1. Select **New session**.
 2. Select agent **Polly**.
