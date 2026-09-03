@@ -4,7 +4,7 @@
 
 ## What this demo shows
 
-Omnigent is a **meta-harness**: it coordinates the coding agents teams already use. In this demo, Polly sends multiple agent harnesses to investigate a real bug and make dependent changes in isolated Git worktrees. The presenter can enter any child session, inspect its files and diff, and show a policy approval from the same interface.
+Omnigent is a **meta-harness**: it coordinates the coding agents teams already use. In this demo, Polly sends multiple agent harnesses to investigate a real bug and make dependent changes in isolated Git worktrees. The presenter can enter any child session to follow or redirect its work, inspect the combined diff from the top-level session, and show a policy approval from the same interface.
 
 A booth conversation normally lasts **5–10 minutes**. Do not try to show every section. Ask what the attendee cares about and jump there.
 
@@ -32,8 +32,8 @@ Before booth duty, run the complete demo once using the prompts below. Leave tha
 Immediately before booth duty:
 
 1. Open `<your-workspace>/omnigent`.
-2. Open the completed rehearsal session and confirm its child sessions and files still load.
-3. Open one implementation child and confirm **Changes → Show diff** works.
+2. Open the completed rehearsal session and confirm its child sessions still load.
+3. Confirm the top-level **Changes → Show diff** view contains the combined result.
 4. If the rehearsal produced a local review, confirm that report is visible.
 5. Start a fresh Sandbox session through the setup steps below and reach **READY**.
 6. If you plan to show AI Gateway, open the prepared usage dashboard or saved query now.
@@ -89,8 +89,8 @@ Suggested line:
 Use this menu privately; do not read it as a script.
 
 - **Multiple agents / orchestration** → run Prompt 1 and show the task graph.
-- **Actual coding work** → run Prompt 2 and open an implementation child.
-- **Isolation** → show that each implementation has its own worktree and branch.
+- **Actual coding work** → run Prompt 2, merge the final branch, and expose the combined top-level diff.
+- **Isolation** → show the implementation child sessions and `git worktree list` in the top-level terminal.
 - **Review** → open a different-vendor review if Polly created one; otherwise show the local diff and tests.
 - **Human control / governance** → add the approval policy.
 - **Databricks integration** → show the prepared AI Gateway usage view.
@@ -131,23 +131,22 @@ If your standard review flow requires a pull request, stop after producing the l
 
 This can take longer than a booth conversation. Let it run while discussing the graph and children. If the attendee wants completed artifacts immediately, open your completed rehearsal session.
 
-## Show the code and worktrees
+## Show the agents and worktrees
 
 From the task graph or Subagents panel:
 
-1. Open the pagination implementation child.
-2. Open **Changes**.
-3. Select a changed file such as `ghlite/client.py` or `ghlite/issues.py`.
-4. Select **Show diff**; use split or unified view according to screen size.
-5. Return to Polly and, if it created a local review session, open the reviewer.
-6. If review was unavailable without a pull request, show the local diff and test result instead.
-7. Open the filtering child and show its smaller incremental diff.
+1. Open the pagination implementation child to show its activity and result.
+2. Return to Polly and, if it created a local review session, open the reviewer.
+3. Open the filtering implementation child to show the dependent second task.
+4. In the top-level terminal, run `git worktree list` to show the isolated task directories and branches.
+
+The child sessions inherit the parent workspace, so their file browsers cannot be rebound to the implementation worktrees. Show their conversations and terminal activity here; the combined visual code diff appears after the next step.
 
 Suggested lines:
 
 > “Each implementation agent gets an isolated Git worktree. Their edits do not collide in one shared directory.”
 
-> “Polly can route an implementation to another model for an independent view. In this rehearsal, the guaranteed artifacts are the local worktree, diff, and tests.”
+> “Polly can route an implementation to another model for an independent view. The child sessions show the work and review; the top-level Changes view will show the combined result.”
 
 ## Merge the reviewed result into the starting branch
 
@@ -281,7 +280,7 @@ Then use Prompts 0–2 and the same reset command. The OSS path does not include
 | Public clone fails | Start one fresh Sandbox. If it fails again, use fallback. |
 | Fewer than two worker vendors available | Do not claim independent cross-vendor review. Use completed session or fallback. |
 | Live work is slow | Keep discussing the graph or open the completed rehearsal session. |
-| Changes list is empty | Confirm you opened the implementation child, not only the top-level orchestrator. |
+| Changes list is empty | In the top-level terminal, confirm `git status --short` lists the demo files after the mixed reset, then reload the session once. |
 | Policy does not trigger | Use a fresh ordinary session for the policy module; do not disrupt the coding run. |
 | Current AI Gateway row is absent | Show prepared historical usage; do not wait or claim immediate ingestion. |
 | Reset is not READY | Abandon that Sandbox and start a fresh session. |
