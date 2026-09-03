@@ -1,0 +1,7 @@
+.worktrees/
+.local-polly/
+.demo-base
+issue-triage/.venv/
+issue-triage/.pytest_cache/
+issue-triage/**/*.egg-info/
+issue-triage/**/__pycache__/
