@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[3]
 DEMO = ROOT / "demos" / "omnigent"
 WORKTREE_ROOT = (ROOT / ".worktrees").resolve()
 BRANCH_PREFIXES = ("polly/", "local-polly/")
+TASK_BRANCHES = {"feat/ghlite-pagination", "feat/ghlite-filter-prs"}
+BASE_FILE = DEMO / ".demo-base"
+BRANCH_FILE = DEMO / ".demo-branch"
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -29,9 +32,17 @@ def main() -> None:
 
     if not args.yes:
         refuse("pass --yes after confirming this is the demo checkout")
+    if not BASE_FILE.is_file() or not BRANCH_FILE.is_file():
+        refuse("setup did not record the starting branch and commit")
+    base_sha = BASE_FILE.read_text().strip()
+    starting_branch = BRANCH_FILE.read_text().strip()
     branch = run("git", "branch", "--show-current").stdout.strip()
-    if not branch or branch.startswith(BRANCH_PREFIXES):
-        refuse("run reset from the starting demo checkout, not a task worktree")
+    if not branch or branch != starting_branch:
+        refuse(f"run reset from recorded starting branch {starting_branch!r}, not {branch!r}")
+    if subprocess.run(
+        ["git", "cat-file", "-e", f"{base_sha}^{{commit}}"], cwd=ROOT, capture_output=True
+    ).returncode:
+        refuse("recorded starting commit is not available")
     origin = run("git", "remote", "get-url", "origin").stdout.strip()
     expected = {
         "https://github.com/databricks-solutions/devrel-examples",
@@ -53,13 +64,22 @@ def main() -> None:
         run("git", "worktree", "remove", "--force", str(path))
     run("git", "worktree", "prune")
 
+    print(f"Restoring {starting_branch} to {base_sha[:12]}")
+    run("git", "reset", "--hard", base_sha)
+
     branches = run("git", "for-each-ref", "--format=%(refname:short)", "refs/heads/").stdout.splitlines()
     for task_branch in branches:
-        if task_branch.startswith(BRANCH_PREFIXES):
+        if task_branch in TASK_BRANCHES or task_branch.startswith(BRANCH_PREFIXES):
             print(f"Deleting branch {task_branch}")
             run("git", "branch", "-D", task_branch)
 
-    for path in (ROOT / ".polly", DEMO / ".local-polly", ROOT / ".worktrees"):
+    for path in (
+        ROOT / ".polly",
+        DEMO / ".local-polly",
+        ROOT / ".worktrees",
+        BASE_FILE,
+        BRANCH_FILE,
+    ):
         if path.exists():
             shutil.rmtree(path)
 
@@ -69,7 +89,7 @@ def main() -> None:
         refuse("seed tests failed after cleanup")
     if run("git", "status", "--porcelain", "--untracked-files=no").stdout.strip():
         refuse("starting checkout is not clean after cleanup")
-    print("READY: no local task branches/worktrees/artifacts, seed tests pass")
+    print("READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass")
 
 
 if __name__ == "__main__":

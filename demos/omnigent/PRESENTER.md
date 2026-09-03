@@ -124,9 +124,9 @@ Expected findings:
 ## Prompt 2 — fix what Polly found
 
 ```text
-Implement the issues from your investigation, working only under demos/omnigent/issue-triage. At minimum, add Link-header pagination first, with focused regression tests; then base a second change on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
+Implement the issues from your investigation, working only under demos/omnigent/issue-triage. At minimum, add Link-header pagination first on branch feat/ghlite-pagination, with focused regression tests; then base branch feat/ghlite-filter-prs on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
 
-If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials.
+If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials. Finish by reporting the final stacked branch and the exact fast-forward merge command for the presenter.
 ```
 
 This can take longer than a booth conversation. Let it run while discussing the graph and children. If the attendee wants completed artifacts immediately, open your completed rehearsal session.
@@ -148,6 +148,25 @@ Suggested lines:
 > “Each implementation agent gets an isolated Git worktree. Their edits do not collide in one shared directory.”
 
 > “Polly can route an implementation to another model for an independent view. In this rehearsal, the guaranteed artifacts are the local worktree, diff, and tests.”
+
+## Merge the reviewed result into the starting branch
+
+Polly deliberately leaves merging to the human. In the top-level session, open a terminal and run:
+
+```bash
+git merge --ff-only feat/ghlite-filter-prs
+cd demos/omnigent/issue-triage
+.venv/bin/python -m pytest -q
+cd ../../..
+```
+
+The final filtering branch is stacked on the pagination branch, so this one fast-forward lands both changes in dependency order. Nothing is pushed.
+
+Return to the top-level session, open **Changes**, and select **Show diff** on `ghlite/client.py` or `ghlite/issues.py`. The starting session now shows the combined change rather than leaving it visible only inside child worktrees.
+
+Suggested line:
+
+> “Polly delivers reviewed branches; the human decides what lands. Once I fast-forward the local starting branch, Omnigent shows the combined diff here.”
 
 ## Show a policy approval
 
@@ -213,10 +232,10 @@ state.
 Expected result:
 
 ```text
-READY: no local task branches/worktrees/artifacts, seed tests pass
+READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
 ```
 
-If reset does not report **READY**, stop using that session. Start a new Sandbox session from the public repository rather than debugging in front of an attendee.
+Reset returns the starting branch to the commit recorded during setup, then removes the demo worktrees and branches. If reset does not report **READY**, stop using that session. Start a new Sandbox session from the public repository rather than debugging in front of an attendee.
 
 ## OSS fallback
 

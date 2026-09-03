@@ -1,5 +1,7 @@
 .worktrees/
 .local-polly/
+.demo-base
+.demo-branch
 issue-triage/.venv/
 issue-triage/.pytest_cache/
 issue-triage/**/*.egg-info/
