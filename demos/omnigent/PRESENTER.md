@@ -14,11 +14,11 @@ The most useful surfaces to show are the agent graph, a child session, the combi
 
 The presenter's Databricks workspace needs the Omnigent and Sandbox previews in a supported region, serverless egress control must be off for this Sandbox path, and **Polly** must appear in the agent picker. With partial support, feel free to adapt the available Omnigent features into your own demo; use the OSS fallback when the managed path is unavailable.
 
-### Prepare the session you will show
+### Keep one completed session
 
-Run the full demo once before booth duty. Because the implementation and review can be slow, the completed session is normally the best artifact to present. It contains the full agent graph, findings, branches, tests, and any review loop.
+Run the full demo once before booth duty and keep that completed session intact. Because implementation and review can be slow, it is normally the best artifact to talk through: the full agent graph, findings, branches, tests, review, and combined diff are already available.
 
-Start a fresh live investigation only when the attendee wants to watch the orchestration begin or when timing permits.
+If you want to run the demo live from start to finish, start a separate new session in a new Sandbox and follow the prompts below. Keep the completed session untouched.
 
 Immediately before booth duty:
 
