@@ -6,13 +6,13 @@
 
 Omnigent is a meta-harness for the coding agents teams already use. It provides one place to coordinate agents across harnesses, inspect and redirect their sessions, manage isolated work, apply policies, and connect model activity to Databricks governance.
 
-The demo uses a deliberately thin Python CLI that calls GitHub's public Issues API, counts open issues, and groups them by label. It worked against a small repository. Against the active `omnigent-ai/omnigent` repository, it reports one page of mixed issue and pull-request data. Polly investigates the discrepancy, coordinates the fixes, and leaves reviewed local branches for the human.
+The demo uses a deliberately thin Python CLI that calls GitHub's public Issues API, counts open issues, and groups them by label. It worked against a small repository. Against the active `omnigent-ai/omnigent` repository, it stops after GitHub's first 30 results instead of fetching every page—and it mistakenly counts pull requests as issues, producing the wrong total and misleading label rankings. Polly investigates the discrepancy, coordinates the fixes, and leaves reviewed local branches for the human.
 
 The most useful surfaces to show are the agent graph, a child session, the combined code diff, a policy approval, and AI Gateway usage. Choose among them based on the conversation.
 
 ## Before the event
 
-The presenter's Databricks workspace needs the Omnigent and Sandbox previews in a supported region, serverless egress control must be off for this Sandbox path, and **Polly** must appear in the agent picker. Otherwise, use the OSS fallback.
+The presenter's Databricks workspace needs the Omnigent and Sandbox previews in a supported region, serverless egress control must be off for this Sandbox path, and **Polly** must appear in the agent picker. With partial support, feel free to adapt the available Omnigent features into your own demo; use the OSS fallback when the managed path is unavailable.
 
 ### Prepare the session you will show
 
