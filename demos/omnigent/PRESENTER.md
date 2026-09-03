@@ -89,7 +89,7 @@ Suggested line:
 Use this menu privately; do not read it as a script.
 
 - **Multiple agents / orchestration** → run Prompt 1 and show the task graph.
-- **Actual coding work** → run Prompt 2, merge the final branch, and expose the combined top-level diff.
+- **Actual coding work** → run Prompt 2, then Prompt 3 to expose the combined top-level diff.
 - **Isolation** → show the implementation child sessions and `git worktree list` in the top-level terminal.
 - **Review** → open a different-vendor review if Polly created one; otherwise show the local diff and tests.
 - **Human control / governance** → add the approval policy.
@@ -148,26 +148,24 @@ Suggested lines:
 
 > “Polly can route an implementation to another model for an independent view. The child sessions show the work and review; the top-level Changes view will show the combined result.”
 
-## Merge the reviewed result into the starting branch
+## Prompt 3 — hand the reviewed branches back
 
-Polly deliberately leaves merging to the human. In the top-level session, open a terminal and run:
+Send Polly:
 
-```bash
-git merge --ff-only feat/ghlite-filter-prs
-cd demos/omnigent/issue-triage
-.venv/bin/python -m pytest -q
-cd ../../..
-
-BASE=$(cat demos/omnigent/.demo-base)
-git reset --mixed "$BASE"
-git status --short
+```text
+Confirm that the implementation is complete, report the final stacked branch, and summarize the tests and any review findings. Do not merge or push anything. End by telling me whether the result is ready for presenter finalization.
 ```
 
-The final filtering branch is stacked on the pagination branch, so this one fast-forward lands both changes in dependency order. Nothing is pushed.
+Polly deliberately leaves merging to the human, and the current managed UI does not expose an in-place agent switch. In the top-level terminal, run the checked-in finalization helper:
 
-The fast-forward first verifies the real combined commit and tests. The mixed reset then returns the starting branch pointer to its recorded base while leaving the combined result in the working tree. Omnigent's Git-backed **Changes** panel reads that working-tree state, so the five combined changed files should now appear in the top-level session. The reviewed commits remain on `feat/ghlite-filter-prs`.
+```bash
+demos/omnigent/issue-triage/.venv/bin/python \
+  demos/omnigent/scripts/expose_diff.py --yes
+```
 
-Return to the top-level session, open **Changes**, and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
+The helper verifies the starting branch is unchanged and clean, checks that pagination is an ancestor of the final filtering branch, rejects changes outside `demos/omnigent/issue-triage`, fast-forwards the final branch, runs the complete tests, and then mixed-resets to the recorded base. The reviewed commits remain on `feat/ghlite-filter-prs`, while their combined content remains in the top-level working tree for the Changes panel.
+
+Open **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
 
 Suggested line:
 
