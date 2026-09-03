@@ -247,11 +247,11 @@ From a terminal:
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse \
+  --branch omnigent-conference-demo \
   https://github.com/databricks-solutions/devrel-examples.git omnigent-demo
 cd omnigent-demo
 git sparse-checkout set demos/omnigent
 
-git checkout omnigent-conference-demo
 cd demos/omnigent/issue-triage
 ./scripts/setup.sh
 cd ../../..
