@@ -80,8 +80,10 @@ def main() -> None:
         BASE_FILE,
         BRANCH_FILE,
     ):
-        if path.exists():
+        if path.is_dir():
             shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
 
     python = DEMO / "issue-triage" / ".venv" / "bin" / "python"
     tests = subprocess.run([str(python), "-m", "pytest", "-q"], cwd=DEMO / "issue-triage")
