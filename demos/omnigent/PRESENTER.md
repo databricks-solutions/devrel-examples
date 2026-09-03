@@ -148,22 +148,21 @@ Suggested lines:
 
 > “Polly can route an implementation to another model for an independent view. The child sessions show the work and review; the top-level Changes view will show the combined result.”
 
-## Prompt 3 — hand the reviewed branches back
+## Prompt 3 — expose the combined diff
 
-Send Polly:
-
-```text
-Confirm that the implementation is complete, report the final stacked branch, and summarize the tests and any review findings. Do not merge or push anything. End by telling me whether the result is ready for presenter finalization.
-```
-
-Polly deliberately leaves merging to the human, and the current managed UI does not expose an in-place agent switch. In the top-level terminal, run the checked-in finalization helper:
+Once Polly reports that `feat/ghlite-filter-prs` is ready, run the human-owned merge in the top-level terminal:
 
 ```bash
-demos/omnigent/issue-triage/.venv/bin/python \
-  demos/omnigent/scripts/expose_diff.py --yes
+git merge --ff-only feat/ghlite-filter-prs
 ```
 
-The helper verifies the starting branch is unchanged and clean, checks that pagination is an ancestor of the final filtering branch, rejects changes outside `demos/omnigent/issue-triage`, fast-forwards the final branch, runs the complete tests, and then mixed-resets to the recorded base. The reviewed commits remain on `feat/ghlite-filter-prs`, while their combined content remains in the top-level working tree for the Changes panel.
+Then send Polly:
+
+```text
+I have fast-forwarded the reviewed branch into the starting branch. Run the full test suite under demos/omnigent/issue-triage. Then read the original starting commit from demos/omnigent/.demo-base and run git reset --mixed to that commit so the combined result remains as working-tree changes for the Omnigent Changes panel. Whether the tests pass or fail, perform the mixed reset and report git status --short. Do not push or modify origin.
+```
+
+The reviewed commits remain on `feat/ghlite-filter-prs`, while their combined content remains in the top-level working tree for the Changes panel.
 
 Open **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
 
