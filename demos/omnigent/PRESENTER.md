@@ -1,68 +1,45 @@
 # Omnigent booth demo — presenter guide
 
-> Draft for rehearsal. This is a presenter-led, modular demo. An attendee never needs an account, repository, or keyboard.
+> Presenter-led and modular. Adapt the walkthrough to the attendee's interests; they never need an account or keyboard.
 
-## What this demo shows
+## The story
 
-Omnigent is a **meta-harness**: it coordinates the coding agents teams already use. In this demo, Polly sends multiple agent harnesses to investigate a real bug and make dependent changes in isolated Git worktrees. The presenter can enter any child session to follow or redirect its work, inspect the combined diff from the top-level session, and show a policy approval from the same interface.
+Omnigent is a meta-harness for the coding agents teams already use. It provides one place to coordinate agents across harnesses, inspect and redirect their sessions, manage isolated work, apply policies, and connect model activity to Databricks governance.
 
-A booth conversation normally lasts **5–10 minutes**. Do not try to show every section. Ask what the attendee cares about and jump there.
+The demo uses a deliberately thin Python CLI that calls GitHub's public Issues API, counts open issues, and groups them by label. It worked against a small repository. Against the active `omnigent-ai/omnigent` repository, it reports one page of mixed issue and pull-request data. Polly investigates the discrepancy, coordinates the fixes, and leaves reviewed local branches for the human.
+
+The most useful surfaces to show are the agent graph, a child session, the combined code diff, a policy approval, and AI Gateway usage. Choose among them based on the conversation.
 
 ## Before the event
 
-### Workspace requirements
+The presenter's Databricks workspace needs the Omnigent and Sandbox previews in a supported region, serverless egress control must be off for this Sandbox path, and **Polly** must appear in the agent picker. Otherwise, use the OSS fallback.
 
-Use your own Databricks workspace. Confirm all of these before booth duty:
+### Prepare the session you will show
 
-- Omnigent preview is enabled.
-- Databricks Sandbox preview is enabled.
-- The workspace region supports Sandbox and Unity AI Gateway.
-- Serverless egress control is not enabled for this Sandbox path.
-- **Polly** appears in the Omnigent agent picker.
-- At least two Polly worker vendors are available.
-- `https://github.com/databricks-solutions/devrel-examples` contains `demos/omnigent` on branch `omnigent-conference-demo`.
-- You can start a Sandbox session against that public repository without GitHub credentials.
+Run the full demo once before booth duty. Because the implementation and review can be slow, the completed session is normally the best artifact to present. It contains the full agent graph, findings, branches, tests, and any review loop.
 
-### Prepare a completed session
-
-Before booth duty, run the complete demo once using the prompts below. Leave that session available as a backup for completed diffs and reviews.
-
-### Two-minute preflight
+Start a fresh live investigation only when the attendee wants to watch the orchestration begin or when timing permits.
 
 Immediately before booth duty:
 
-1. Open `<your-workspace>/omnigent`.
-2. Open the completed rehearsal session and confirm its child sessions still load.
-3. Confirm the top-level **Changes → Show diff** view contains the combined result.
-4. If the rehearsal produced a local review, confirm that report is visible.
-5. Start a fresh Sandbox session through the setup steps below and reach **READY**.
-6. If you plan to show AI Gateway, open the prepared usage dashboard or saved query now.
-7. If you plan to show the phone view, open the target session on your exact phone and network now.
+1. Open the completed session and confirm its child sessions load.
+2. Confirm the top-level **Changes → Show diff** view contains the combined result.
+3. If you plan to show AI Gateway or the phone view, open and verify those surfaces now.
 
-## Start a fresh live session
+## Start a fresh session
 
 In workspace/omnigent:
 
 ![Prompt 0 ready to submit with Polly and Databricks Sandbox while the devrel-examples repository dialog is open.](assets/start-fresh-live-session.png)
 
 1. Select **New session**.
-2. Select agent **Polly**.
-3. Select host **Sandbox**.
-4. Set repository to:
+2. Select **Polly**.
+3. Select **Databricks Sandbox**.
+4. Set repository to `https://github.com/databricks-solutions/devrel-examples`.
+5. For the current rehearsal, set branch to `omnigent-conference-demo`. Once the demo is on `main`, leave the branch blank.
+6. Paste Prompt 0.
 
-   ```text
-   https://github.com/databricks-solutions/devrel-examples
-   ```
-
-5. Set branch to:
-
-   ```text
-   omnigent-conference-demo
-   ```
-
-6. Paste **Prompt 0**.
-
-The public repository supplies the code. This demo does not require GitHub credentials and does not push or open pull requests.
+No GitHub credentials are required. The demo reads public data and keeps all code changes local.
 
 ## Prompt 0 — prepare and show the problem
 
@@ -74,54 +51,23 @@ Verify that demos/omnigent exists, then run the documented setup for demos/omnig
 Run the naive issue-triage client against the public omnigent-ai/omnigent repository. Report the item count and top labels exactly as observed. Do not change source code or tests. Stop after reporting READY or a specific blocker.
 ```
 
-### What to point out
+The CLI normally reports exactly **30** items because it reads one default API page. Pull-request labels can appear in what it calls an issue summary. Exact labels and repository totals drift; the stable signal is one page containing mixed object types.
 
-The demo repository contains a deliberately thin Python CLI that calls GitHub's public Issues API, counts a repository's open issues, and groups them by label. It worked against a small repository. Against the active Omnigent repository, its hidden assumptions become obvious—and Polly has a concrete problem to investigate and fix.
-
-The CLI normally reports exactly **30** items because it reads one default API page. Labels associated with pull requests can appear in what it calls an issue summary. Exact labels and repository totals change over time; the stable signal is “one page and mixed object types,” not a memorized count beyond 30.
-
-Suggested line:
-
-> “This worked on a tiny repository. Point it at an active tracker and the assumptions become visible.”
-
-## Ask what the attendee cares about
-
-Use this menu privately; do not read it as a script.
-
-- **Multiple agents / orchestration** → run Prompt 1 and show the task graph.
-- **Actual coding work** → run Prompt 2, then Prompt 3 to expose the combined top-level diff.
-- **Isolation** → show the implementation child sessions and `git worktree list` in the top-level terminal.
-- **Review** → open a different-vendor review if Polly created one; otherwise show the local diff and tests.
-- **Human control / governance** → add the approval policy.
-- **Databricks integration** → show the prepared AI Gateway usage view.
-- **Remote collaboration** → optionally open the same session on your phone.
-
-## Prompt 1 — ask Polly to triage the problem
+## Prompt 1 — investigate
 
 ```text
 /investigate This GitHub issue-triage client worked on a small repository, but its output for omnigent-ai/omnigent looks wrong. Use multiple read-only agents to find the problems, report evidence from the code and live GitHub API, and recommend the order in which they should be fixed. Do not edit code or tests yet.
 ```
 
-### Key narrative
+Show the task graph and open one investigation child. The important findings are:
 
-Open the task graph and one or both investigation children.
+- the client ignores GitHub's `Link: rel="next"` pagination;
+- the Issues endpoint also returns pull-request objects;
+- pagination must land before filtering because both affect issue listing.
 
-Suggested lines:
+The point is dependency-aware coordination across visible agent sessions, not simply running more agents.
 
-> “Claude Code, Codex, Pi, and other tools are individual harnesses. Omnigent sits above them and coordinates the work.”
-
-> “I can enter any child session, see what it is doing, and redirect it. I am not copying findings between separate tools.”
-
-> “The important result is not ‘use more agents.’ It is deciding what must happen first and what can safely separate.”
-
-Expected findings:
-
-- The client reads only the first page and ignores GitHub's `Link: rel="next"` response.
-- GitHub's Issues endpoint also returns pull-request objects.
-- Pagination changes the client interface used by issue listing, so pagination must be completed first.
-- Pull-request filtering should be implemented from the reviewed pagination result, not in parallel from the original seed.
-
-## Prompt 2 — fix what Polly found
+## Prompt 2 — implement
 
 ```text
 Implement the issues from your investigation, working only under demos/omnigent/issue-triage. At minimum, add Link-header pagination first on branch feat/ghlite-pagination, with focused regression tests; then base branch feat/ghlite-filter-prs on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
@@ -129,24 +75,15 @@ Implement the issues from your investigation, working only under demos/omnigent/
 If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials. Finish by reporting the final stacked branch and the exact fast-forward merge command for the presenter.
 ```
 
-This can take longer than a booth conversation. Let it run while discussing the graph and children. If the attendee wants completed artifacts immediately, open your completed rehearsal session.
+This may take longer than a booth conversation. Let it run while discussing the graph, or return to the completed session.
 
-## Show the agents and worktrees
+To show the work:
 
-From the task graph or Subagents panel:
+1. Open an implementation child to show its activity and result.
+2. Open a review child if Polly created one.
+3. Run `git worktree list` in the top-level terminal to show the isolated branches.
 
-1. Open the pagination implementation child to show its activity and result.
-2. Return to Polly and, if it created a local review session, open the reviewer.
-3. Open the filtering implementation child to show the dependent second task.
-4. In the top-level terminal, run `git worktree list` to show the isolated task directories and branches.
-
-The child sessions inherit the parent workspace, so their file browsers cannot be rebound to the implementation worktrees. Show their conversations and terminal activity here; the combined visual code diff appears after the next step.
-
-Suggested lines:
-
-> “Each implementation agent gets an isolated Git worktree. Their edits do not collide in one shared directory.”
-
-> “Polly can route an implementation to another model for an independent view. The child sessions show the work and review; the top-level Changes view will show the combined result.”
+Child sessions inherit the parent workspace, so their file browsers cannot be rebound to the worktrees. The combined visual diff appears in the top-level session after Prompt 3.
 
 ## Prompt 3 — expose the combined diff
 
@@ -156,7 +93,7 @@ Once Polly reports that `feat/ghlite-filter-prs` is ready, open a terminal in th
 git merge --ff-only feat/ghlite-filter-prs
 ```
 
-Do this quietly rather than talking through it. It is a short workaround for Polly's deliberate no-merge boundary and the Changes panel's working-tree behavior, not a demo beat.
+Do this quietly. It is a short workaround for Polly's no-merge boundary and the Changes panel's working-tree behavior, not a demo beat.
 
 Then send Polly:
 
@@ -164,30 +101,24 @@ Then send Polly:
 I have fast-forwarded the reviewed branch into the starting branch. Run the full test suite under demos/omnigent/issue-triage. Then read the original starting commit from demos/omnigent/.demo-base and run git reset --mixed to that commit so the combined result remains as working-tree changes for the Omnigent Changes panel. Whether the tests pass or fail, perform the mixed reset and report git status --short. Do not push or modify origin.
 ```
 
-The reviewed commits remain on `feat/ghlite-filter-prs`, while their combined content remains in the top-level working tree for the Changes panel.
+Open top-level **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. Reload the session once if the panel has not refreshed.
 
-Open **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. If the panel has not refreshed, reload the session once.
+The reviewed commits remain on `feat/ghlite-filter-prs`; the mixed reset exposes their combined content without losing them.
 
 ## Show a policy approval
 
-After the coding flow—or in the completed rehearsal session:
-
 1. Open the top-level session's information panel.
 2. Under **Policies**, select **Add**.
-3. Add the built-in **Require Approval for File & Shell Operations** policy (`ask_on_os_tools`).
+3. Add **Require Approval for File & Shell Operations** (`ask_on_os_tools`).
 4. Send:
 
    ```text
    Read demos/omnigent/README.md and summarize its first paragraph.
    ```
 
-5. Show the approval card and select **Approve**.
+5. Show the approval card and approve the read.
 
-Suggested line:
-
-> “Policies run at the Omnigent layer. This session can pause a tool action for approval regardless of which model is driving the conversation.”
-
-Do not claim that a policy attached to the top-level session automatically governed every child session. That inheritance is not part of this demonstration.
+Use this to discuss governance at the Omnigent layer. Do not claim that a policy attached to the top-level session automatically governed every child session.
 
 ## Optional: show AI Gateway usage
 
@@ -195,38 +126,24 @@ Sandbox model calls route through the workspace's Foundation Model APIs over Uni
 
 ![Workspace AI Gateway Usage Analytics showing requests, token usage, latency, endpoints, models, and coding agents.](assets/ai-gateway-usage-analytics.png)
 
-Open a **prepared** AI Gateway Usage dashboard or saved query over `system.ai_gateway.usage`. Point out whichever fields are already populated:
+Open a prepared Workspace AI Gateway Usage Analytics dashboard. The **Coding Agents** view can show requests, total tokens, latency, endpoints, destination models, and users across Claude Code and Codex activity.
 
-- request and model-service count;
-- requested endpoint and actual destination model;
-- requester;
-- status and latency;
-- input, output, and total tokens.
-
-Suggested line:
-
-> “The models are supplied through the presenter's Databricks workspace, so the same AI Gateway governance and usage records apply.”
-
-Do not wait for the current request to appear. Usage-table ingestion has no published immediate-visibility guarantee, and the built-in dashboard may refresh slowly. Use prepared historical data or a saved prior run. Treat cost, inference tables, and unified traces as optional modules only when preconfigured and populated.
+Use prepared historical data rather than waiting for the current run to appear. Treat cost analysis, inference tables, and unified traces as optional only when they are already configured and populated.
 
 ## Optional: phone view
 
-Show this only if it passed preflight on the exact device and network.
-
-Open the managed workspace in the Omnigent native mobile app using your own authenticated workspace identity, then open the same session. Use the laptop if approval or navigation is unreliable. Never improvise a public tunnel or expose a local Omnigent server at the booth.
+Show this only if it passed preflight on the exact device and network. Open the same managed session from the Omnigent mobile app using your workspace identity. Never improvise a public tunnel.
 
 ## Reset for the next attendee
 
-In the current top-level session, send:
+This section applies only if you started or modified a live session. A completed presentation session can remain untouched.
+
+In the live top-level session, send:
 
 ```text
 Reset this demo workspace for the next attendee.
 
-Run demos/omnigent/scripts/reset_demo.py --yes using the issue-triage virtual
-environment. Confirm that the displayed working-tree changes are discarded,
-Polly worktrees and local task branches are gone, runtime artifacts are removed,
-the starting branch is clean, and the seed tests pass. Preserve the public
-origin remote. Report READY or the exact remaining state.
+Run demos/omnigent/scripts/reset_demo.py --yes using the issue-triage virtual environment. Confirm that the displayed working-tree changes are discarded, Polly worktrees and local task branches are gone, runtime artifacts are removed, the starting branch is clean, and the seed tests pass. Preserve the public origin remote. Report READY or the exact remaining state.
 ```
 
 Expected result:
@@ -235,20 +152,13 @@ Expected result:
 READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
 ```
 
-Reset returns the starting branch to the commit recorded during setup, then removes the demo worktrees and branches. If reset does not report **READY**, stop using that session. Start a new Sandbox session from the public repository rather than debugging in front of an attendee.
+If reset does not report **READY**, abandon that Sandbox and start a fresh session.
 
 ## OSS fallback
 
-Use this only when the presenter's workspace lacks Omnigent/Sandbox access.
+Use this when the presenter's workspace lacks Omnigent or Sandbox access.
 
-Requirements:
-
-- local Omnigent installation;
-- Python 3.12+, Node.js 22 LTS, npm, and tmux;
-- at least two authenticated worker vendors for the independent-review claim;
-- the public `devrel-examples` repository.
-
-From a terminal:
+Requirements: local Omnigent, Python 3.12+, Node.js 22 LTS, npm, tmux, and at least two authenticated worker vendors for cross-vendor review.
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse \
@@ -256,32 +166,33 @@ git clone --depth 1 --filter=blob:none --sparse \
   https://github.com/databricks-solutions/devrel-examples.git omnigent-demo
 cd omnigent-demo
 git sparse-checkout set demos/omnigent
-
 cd demos/omnigent/issue-triage
 ./scripts/setup.sh
 cd ../../..
-
 omni polly
 ```
 
-Then use Prompts 0–2 and the same reset command. The OSS path does not include Databricks Sandbox or AI Gateway observability.
+Once the demo is on `main`, remove the `--branch omnigent-conference-demo` line. Use Prompts 0–3. The OSS path does not include Databricks Sandbox or AI Gateway observability.
 
-## If something fails
+## Quick recovery
 
 | Problem | Response |
 |---|---|
-| Polly missing from picker | Managed setup is incomplete. Use OSS fallback or the completed session. |
-| `demos/omnigent` missing | The public demo contents are not on the selected branch. Stop. |
-| Public clone fails | Start one fresh Sandbox. If it fails again, use fallback. |
-| Fewer than two worker vendors available | Do not claim independent cross-vendor review. Use completed session or fallback. |
-| Live work is slow | Keep discussing the graph or open the completed rehearsal session. |
-| Changes list is empty | In the top-level terminal, confirm `git status --short` lists the demo files after the mixed reset, then reload the session once. |
-| Policy does not trigger | Use a fresh ordinary session for the policy module; do not disrupt the coding run. |
-| Current AI Gateway row is absent | Show prepared historical usage; do not wait or claim immediate ingestion. |
-| Reset is not READY | Abandon that Sandbox and start a fresh session. |
+| Polly or Sandbox unavailable | Use the completed session or OSS fallback. |
+| `demos/omnigent` missing | Check the rehearsal branch; otherwise stop. |
+| Live work is slow | Continue with the completed session. |
+| Fewer than two worker vendors available | Do not claim cross-vendor review. |
+| Changes is empty after Prompt 3 | Confirm `git status --short` lists the demo files, then reload once. |
+| Policy does not trigger | Use a fresh ordinary session for the policy module. |
+| Current AI Gateway row is absent | Show prepared historical usage. |
+| Reset is not READY | Abandon the Sandbox and start a fresh session. |
 
-## Close
+## Features this project lets you discuss
 
-Suggested closer:
-
-> “The point is not another coding agent. Omnigent is the layer that composes the agents, gives each one a safe place to work, routes their artifacts and reviews, and applies governance across the session.”
+- coordination across Claude Code, Codex, Pi, and other agent harnesses;
+- task decomposition, dependency ordering, and isolated worktrees;
+- entering and redirecting child sessions;
+- independent review and normal engineering artifacts;
+- contextual policies and human approval;
+- Databricks-managed models, AI Gateway governance, and usage analytics;
+- session sharing and optional mobile access.
