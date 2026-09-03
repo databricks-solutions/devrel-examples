@@ -145,7 +145,7 @@ In the live top-level session, send:
 ```text
 Reset this demo workspace for the next attendee.
 
-Run demos/omnigent/scripts/reset_demo.py --yes using the issue-triage virtual environment. Confirm that the displayed working-tree changes are discarded, Polly worktrees and local task branches are gone, runtime artifacts are removed, the starting branch is clean, and the seed tests pass. Preserve the public origin remote. Report READY or the exact remaining state.
+Run demos/omnigent/issue-triage/.venv/bin/python demos/omnigent/scripts/reset_demo.py --yes. Confirm that the displayed working-tree changes are discarded, Polly worktrees and local task branches are gone, runtime artifacts are removed, the starting branch is clean, and the seed tests pass. Preserve the public origin remote. Report READY or the exact remaining state.
 ```
 
 Expected result:
@@ -154,7 +154,7 @@ Expected result:
 READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
 ```
 
-This confirmation means the checkout is back at the initial demo state and can be reused. If the reset command errors or reports leftover changes, abandon that Sandbox and start a fresh session.
+This confirmation means the checkout is back at the initial demo state. To reuse the same Sandbox for another attendee, open the chat's terminal view in Omnigent and run `/clear` to reset the chat. If `reset_demo.py` errors or reports leftover changes, abandon that Sandbox and start a fresh session.
 
 ## OSS fallback
 
@@ -186,7 +186,7 @@ Once the demo is on `main`, remove the `--branch omnigent-conference-demo` line.
 | Changes is empty after Prompt 3 | Confirm `git status --short` lists the demo files, then reload once. |
 | Policy does not trigger | Use a fresh ordinary session for the policy module. |
 | AI Gateway Usage dashboard is empty | Confirm the time-range filter is set to today, then broaden it to a prior date if needed. |
-| Reset command errors or leaves changes behind | Abandon the Sandbox and start a fresh session. |
+| `reset_demo.py` errors or leaves changes behind | Abandon the Sandbox and start a fresh session. |
 
 ## Features this project lets you discuss
 
