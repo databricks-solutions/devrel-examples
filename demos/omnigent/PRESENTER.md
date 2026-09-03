@@ -124,7 +124,7 @@ Expected findings:
 ## Prompt 2 — fix what Polly found
 
 ```text
-Implement the issues from your investigation, working only under demos/omnigent/issue-triage. Respect the dependency order you identified, use separate local worktrees where appropriate, and add focused regression tests. Keep all work local: do not push, open a pull request, or merge into the starting branch.
+Implement the issues from your investigation, working only under demos/omnigent/issue-triage. At minimum, add Link-header pagination first, with focused regression tests; then base a second change on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
 
 If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials.
 ```
