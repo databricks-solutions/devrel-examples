@@ -1,0 +1,28 @@
+# Unity AI Gateway Governance Demo
+# Copy this file to .env and fill in your values.
+
+# Databricks workspace
+DATABRICKS_HOST=https://<workspace>.cloud.databricks.com
+DATABRICKS_TOKEN=dapi...
+
+# Unity AI Gateway model services — one per provider. Each must already exist
+# (created in the Databricks UI) with its guardrail policies attached.
+#
+# *_MODEL_SERVICE is the fully-qualified Unity Catalog name (catalog.schema.service).
+# It is sent as the request's `model` field and is what selects the governed
+# service — all three share the one gateway URL:
+#   {DATABRICKS_HOST}/ai-gateway/mlflow/v1/chat/completions
+#
+# *_MODEL is a display label for the model the service routes to.
+CLAUDE_MODEL_SERVICE=<catalog>.<schema>.<claude-service>
+CLAUDE_MODEL=databricks-claude-opus-4-8
+OPENAI_MODEL_SERVICE=<catalog>.<schema>.<openai-service>
+OPENAI_MODEL=databricks-gpt-5-6-sol
+GEMINI_MODEL_SERVICE=<catalog>.<schema>.<gemini-service>
+GEMINI_MODEL=databricks-gemini-3-6-flash
+
+# Unity Catalog catalog holding the inference tables. Each service's exact
+# table is discovered from the model-services API at runtime.
+# Unity AI Gateway Demo Catalog (uaig_demo)
+UC_CATALOG=uaig_demo
+MLFLOW_SCHEMA=uaigw_mlflow
