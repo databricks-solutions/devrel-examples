@@ -51,8 +51,8 @@ def main() -> None:
     if run("git", "status", "--porcelain").stdout.strip():
         refuse("starting checkout has modified or untracked files")
 
-    pagination_sha = require_commit(PAGINATION_BRANCH)
-    final_sha = require_commit(FINAL_BRANCH)
+    pagination_sha = require_commit(f"refs/heads/{PAGINATION_BRANCH}")
+    final_sha = require_commit(f"refs/heads/{FINAL_BRANCH}")
     if run("git", "merge-base", "--is-ancestor", pagination_sha, final_sha, check=False).returncode:
         refuse(f"{FINAL_BRANCH} is not based on {PAGINATION_BRANCH}")
     if run("git", "merge-base", "--is-ancestor", base_sha, final_sha, check=False).returncode:
@@ -69,18 +69,28 @@ def main() -> None:
     run("git", "merge", "--ff-only", FINAL_BRANCH)
 
     python = DEMO / "issue-triage" / ".venv" / "bin" / "python"
-    tests = subprocess.run(
-        [str(python), "-m", "pytest", "-q"], cwd=DEMO / "issue-triage"
-    )
+    test_returncode = 1
+    test_error: str | None = None
+    try:
+        tests = subprocess.run(
+            [str(python), "-m", "pytest", "-q"], cwd=DEMO / "issue-triage"
+        )
+        test_returncode = tests.returncode
+    except KeyboardInterrupt:
+        test_returncode = 130
+        test_error = "tests were interrupted"
+    except OSError as exc:
+        test_error = f"tests could not start: {exc}"
+    finally:
+        # Whether tests pass, fail, cannot start, or are interrupted, restore the
+        # branch pointer while retaining the combined content for inspection.
+        run("git", "reset", "--mixed", base_sha)
+        print(run("git", "status", "--short").stdout, end="")
 
-    # Whether tests pass or fail, restore the branch pointer while retaining the
-    # combined content as a working-tree diff for inspection and safe reset.
-    run("git", "reset", "--mixed", base_sha)
-    print(run("git", "status", "--short").stdout, end="")
-
-    if tests.returncode:
-        print("NOT READY: combined tests failed; use the completed rehearsal session", file=sys.stderr)
-        raise SystemExit(tests.returncode)
+    if test_returncode:
+        detail = test_error or "combined tests failed"
+        print(f"NOT READY: {detail}; use the completed rehearsal session", file=sys.stderr)
+        raise SystemExit(test_returncode)
     print("READY: combined tests pass and Changes can display the working-tree diff")
 
 
