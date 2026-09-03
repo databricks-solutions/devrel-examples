@@ -8,7 +8,6 @@ cd "$ROOT"
 
 if [[ ! -f "$DEMO_ROOT/.demo-base" ]]; then
   git -C "$GIT_ROOT" rev-parse HEAD > "$DEMO_ROOT/.demo-base"
-  git -C "$GIT_ROOT" branch --show-current > "$DEMO_ROOT/.demo-branch"
 fi
 
 python3 -m venv .venv

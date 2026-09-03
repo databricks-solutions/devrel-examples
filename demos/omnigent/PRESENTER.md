@@ -36,7 +36,7 @@ In workspace/omnigent:
 2. Select **Polly**.
 3. Select **Databricks Sandbox**.
 4. Set repository to `https://github.com/databricks-solutions/devrel-examples`.
-5. For the current rehearsal, set branch to `omnigent-conference-demo`. Once the demo is on `main`, leave the branch blank.
+5. Leave the branch blank to use `main`.
 6. Paste Prompt 0.
 
 No GitHub credentials are required. The demo reads public data and keeps all code changes local.
@@ -105,7 +105,7 @@ I have fast-forwarded the reviewed branch into the starting branch. Run the full
 
 Open top-level **Changes** and select **Show diff** on `ghlite/client.py`, `ghlite/issues.py`, or either new test file. Reload the session once if the panel has not refreshed.
 
-The reviewed commits remain on `feat/ghlite-filter-prs`; the mixed reset exposes their combined content without losing them.
+The reviewed commits remain on `feat/ghlite-filter-prs`; the mixed reset exposes their combined content without losing them. Keep the completed session intact. For another live run, start a new session in a new Sandbox.
 
 ## Show a policy approval
 
@@ -136,26 +136,6 @@ If today's activity has not appeared yet, broaden the date range rather than wai
 
 Show this only if it passed preflight on the exact device and network. Open the same managed session from the Omnigent mobile app using your workspace identity. Never improvise a public tunnel.
 
-## Reset for the next attendee
-
-This section applies only if you started or modified a live session. A completed presentation session can remain untouched.
-
-In the live top-level session, send:
-
-```text
-Reset this demo workspace for the next attendee.
-
-Run demos/omnigent/issue-triage/.venv/bin/python demos/omnigent/scripts/reset_demo.py --yes. Confirm that the displayed working-tree changes are discarded, Polly worktrees and local task branches are gone, runtime artifacts are removed, the starting branch is clean, and the seed tests pass. Preserve the public origin remote. Report READY or the exact remaining state.
-```
-
-Expected result:
-
-```text
-READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
-```
-
-This confirmation means the repository is back at the initial demo state. It does not clear the conversation. Start a fresh Omnigent session when you need fresh chat context. If `reset_demo.py` errors or reports leftover changes, abandon that Sandbox and start a fresh session.
-
 ## OSS fallback
 
 Use this when the presenter's workspace lacks Omnigent or Sandbox access.
@@ -164,7 +144,6 @@ Requirements: local Omnigent, Python 3.12+, Node.js 22 LTS, npm, tmux, and at le
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse \
-  --branch omnigent-conference-demo \
   https://github.com/databricks-solutions/devrel-examples.git omnigent-demo
 cd omnigent-demo
 git sparse-checkout set demos/omnigent
@@ -174,7 +153,7 @@ cd ../../..
 omni polly
 ```
 
-Once the demo is on `main`, remove the `--branch omnigent-conference-demo` line. Use Prompts 0–3. The OSS path does not include Databricks Sandbox or AI Gateway observability.
+Use Prompts 0–3. The OSS path does not include Databricks Sandbox or AI Gateway observability.
 
 ## Quick recovery
 
@@ -186,7 +165,6 @@ Once the demo is on `main`, remove the `--branch omnigent-conference-demo` line.
 | Changes is empty after Prompt 3 | Confirm `git status --short` lists the demo files, then reload once. |
 | Policy does not trigger | Use a fresh ordinary session for the policy module. |
 | AI Gateway Usage dashboard is empty | Confirm the time-range filter is set to today, then broaden it to a prior date if needed. |
-| `reset_demo.py` errors or leaves changes behind | Abandon the Sandbox and start a fresh session. |
 
 ## Features this project lets you discuss
 
