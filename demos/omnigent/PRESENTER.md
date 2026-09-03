@@ -154,7 +154,7 @@ Expected result:
 READY: starting branch restored; no local task branches/worktrees/artifacts; seed tests pass
 ```
 
-This confirmation means the checkout is back at the initial demo state. To reuse the same Sandbox for another attendee, open the chat's terminal view in Omnigent and run `/clear` to reset the chat. If `reset_demo.py` errors or reports leftover changes, abandon that Sandbox and start a fresh session.
+This confirmation means the repository is back at the initial demo state. It does not clear the conversation. Start a fresh Omnigent session when you need fresh chat context. If `reset_demo.py` errors or reports leftover changes, abandon that Sandbox and start a fresh session.
 
 ## OSS fallback
 
