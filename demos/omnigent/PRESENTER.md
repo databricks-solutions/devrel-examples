@@ -174,6 +174,8 @@ Do not claim that a policy attached to the top-level session automatically gover
 
 Sandbox model calls route through the workspace's Foundation Model APIs over Unity AI Gateway automatically.
 
+![Workspace AI Gateway Usage Analytics showing requests, token usage, latency, endpoints, models, and coding agents.](assets/ai-gateway-usage-analytics.png)
+
 Open a **prepared** AI Gateway Usage dashboard or saved query over `system.ai_gateway.usage`. Point out whichever fields are already populated:
 
 - request and model-service count;
