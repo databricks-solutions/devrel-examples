@@ -1,0 +1,24 @@
+[project]
+name = "unity-ai-gateway-governance-demo"
+version = "0.1.0"
+description = "Databricks demo: govern coding-agent sprawl by routing agents through Unity AI Gateway model services"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mlflow>=3.1.0",
+    "requests>=2.31.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "openai>=1.0.0",
+    "jupyter>=1.0.0",
+]
+
+# Demo notebook and modules only — not packaged or installed. Run `uv sync`
+# to create a local venv with these dependencies, then launch the notebook.
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
