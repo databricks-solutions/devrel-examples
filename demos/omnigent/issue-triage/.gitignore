@@ -1,0 +1,9 @@
+.ghlite-cache.json
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.polly/
+.local-polly/
+.worktrees/

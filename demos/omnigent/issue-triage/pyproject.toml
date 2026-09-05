@@ -1,0 +1,16 @@
+[project]
+name = "ghlite"
+version = "0.1.0"
+description = "A deliberately thin GitHub REST client for triaging a repo's issues."
+requires-python = ">=3.9"
+dependencies = ["requests>=2.28"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ghlite"]
