@@ -26,3 +26,9 @@ GEMINI_MODEL=databricks-gemini-3-6-flash
 # Unity AI Gateway Demo Catalog (uaig_demo)
 UC_CATALOG=uaig_demo
 MLFLOW_SCHEMA=uaigw_mlflow
+
+# Absolute Databricks workspace path for this presenter's MLflow experiment.
+MLFLOW_EXPERIMENT_NAME=/Users/<your-email>/unityai-gateway-governance-demo
+
+# Act 2 requests per agent: 1–15. The default 10 produces 50 requests total.
+CLEAN_PER_AGENT=10

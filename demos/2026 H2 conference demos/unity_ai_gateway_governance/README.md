@@ -20,22 +20,23 @@ The notebook runs eight acts. Agents route to providers like this: Cursor and Cl
 
 | Act | What it shows |
 |-----|---------------|
-| 1. Verify the gateway | Reads each service's deployed config from Unity Catalog — guardrail policies and phases, routed model, inference table, rate limits. Fails fast and warns when anything is missing. |
+| 1. Verify the gateway | Reads each service's deployed config from Unity Catalog — guardrail policies and phases, routed model, inference table, and rate limits—and reports missing setup prominently. |
 | 2. Simulate the agent swarm | Five agents, each with its own persona prompt, routed to its provider's service. 50 realistic coding requests. |
 | 3. Guardrails in action | PII, jailbreak, and unsafe-content requests denied by each service's policies. Unsafe content also shows defense in depth: what the gateway allows through, the model still refuses. |
 | 4. The audit trail | Explore the three inference tables in plain English with Genie. No SQL. |
 | 5. Usage tracking | Tokens and latency per provider, plus hourly aggregates from `system.ai_gateway.usage`. The chargeback view. |
 | 6. Rate limiting | Two bursts against different providers prove budgets are per-service: 25 tiny requests trip QPM on Claude, 8 large ones trip TPM on OpenAI. Early requests pass, later ones get HTTP 429. |
 | 7. MLflow tracing | Every request, allowed or denied, recorded as a trace tagged with `agent`, `provider`, and `model_service` — which is what makes per-agent and per-provider attribution work. Browse by experiment or query the trace tables with Genie. |
-| 8. Finale | A dashboard pulling it together: performance, cost, and per-agent usage. |
+| 8. Finale | A dashboard screenshot tying together performance, cost, and per-agent usage; substitute a live workspace dashboard when available. |
 
-**Act 2 volume.** Each agent sends 10 requests from `clean_tasks.py` (linked lists, binary search, decorators, config/IaC, code review), round-robin so the provider rotates each call. Budget 4–10 minutes. To send more, raise `CLEAN_PER_AGENT` to 15 (the catalog holds 15 tasks per agent) for 75 requests — nothing else changes.
+**Act 2 volume.** Each agent sends 10 requests from `clean_tasks.py` (linked lists, binary search, decorators, config/IaC, code review), round-robin by agent to avoid long runs against one provider. Budget 4–10 minutes. To send more, raise `CLEAN_PER_AGENT` to 15 (the catalog holds 15 tasks per agent) for 75 requests — nothing else changes.
 
 ## Prerequisites
 
 - A Databricks workspace with Unity Catalog
-- A personal access token (for running locally from Cursor against the workspace)
 - Three Unity AI Gateway model services, configured as below
+- For local runs: Python 3.10+, [uv](https://docs.astral.sh/uv/), and a Databricks personal access token
+- For workspace runs: the Databricks CLI and an authenticated profile with access to the target workspace
 
 ## Configure the three model services
 
@@ -76,9 +77,9 @@ For each service:
 
    > **These values suit Act 6 and will choke Act 2.** Limits are per-service, so one setting serves both. Act 2 sends 50 requests averaging ~1,100 tokens; against `QPM=8`/`TPM=2000` most draw a 429 and fall back on retry backoff. Either leave limits unset until you demo Act 6 (Acts 1–5 don't need them), or run the volume acts at ~`QPM=60`/`TPM=100000` and drop down for Act 6. Act 2 reporting requests that "exhausted retries on HTTP 429" is this.
 
-Once all three exist, copy each fully-qualified name into the matching `*_MODEL_SERVICE` variable in `.env`, or into the notebook's config cell when running on Databricks.
+Once all three exist, copy each fully-qualified name into the matching `*_MODEL_SERVICE` variable in `.env`. On Databricks, the notebook creates widgets for these values; fill them in and rerun the configuration cell before Act 1.
 
-Acts 7 and 8 need no per-service config: Act 7 reads MLflow traces from the experiment you name in the config cell (select `unityai-gateway-governance-demo` under Experiments), and Act 8 launches the dashboard.
+Act 7 reads MLflow traces from the configured experiment. Act 8 is a screenshot-based finale because this bundle does not create a dashboard; replace it with a live workspace dashboard when one is already available.
 
 ![AI Gateway dashboard](./images/uaigw_images_4.png)
 
@@ -146,12 +147,21 @@ Detect blocks with `databricks_service_policy.action == "deny"` (see `detect_pol
 2. Add all three `<service-name>_payload` tables as data sources. Use the exact paths Act 1 prints under `Discovered inference tables:` (a table may live outside its service's schema). Add `system.ai_gateway.usage` too, for Act 5.
 3. Keep the space open during the demo. Acts 4 and 5 supply questions to paste in; no code to run.
 
+## Presenter preflight
+
+1. Run Act 1 and confirm all three services are reachable, guardrails and inference tables are present, and the displayed routed models match your plan.
+2. Run Act 2 before the session so inference-table, usage, and trace data have time to arrive. Keep the notebook open at the resulting summary.
+3. Keep QPM/TPM limits high or unset for Acts 1–5. Lower them to the documented demo values immediately before Act 6, then restore the normal limits afterward.
+4. Open the Genie space and MLflow experiment before presenting. Treat Act 8 as a screenshot unless you have separately prepared a live dashboard.
+
+If a rerun is partially complete, restart the kernel and run from Setup through the last required act. For `429` responses outside Act 6, raise the service limits or wait for the window to reset. For empty inference, usage, or trace results, wait for ingestion and widen the query time range before rerunning model traffic.
+
 ## Running locally
 
 1. Create a `.env` from the template:
 
     ```bash
-    cd unity_ai_gateway_governance
+    cd 'demos/2026 H2 conference demos/unity_ai_gateway_governance'
     cp env-template .env
     ```
 
@@ -167,12 +177,14 @@ Detect blocks with `databricks_service_policy.action == "deny"` (see `detect_pol
     | `GEMINI_MODEL` | Model it routes to, e.g. `databricks-gemini-3-6-flash`. Display label only |
     | `UC_CATALOG` | Catalog holding the inference tables; each service's table is discovered at runtime |
     | `MLFLOW_SCHEMA` | Schema holding the MLflow trace tables |
+    | `MLFLOW_EXPERIMENT_NAME` | Absolute workspace path for this presenter's MLflow experiment |
+    | `CLEAN_PER_AGENT` | Act 2 requests per agent (`1`–`15`; default `10` = 50 total) |
 
 2. Install and launch:
 
     ```bash
     uv sync
-    jupyter notebook ai_gateway_demo.ipynb
+    uv run jupyter notebook ai_gateway_demo.ipynb
     ```
 
     Or open `ai_gateway_demo.ipynb` from within your Cursor IDE.
@@ -191,23 +203,23 @@ The project uses [Declarative Automation Bundles](https://docs.databricks.com/en
     brew install databricks/tap/databricks
     ```
 
-2. Authenticate:
+2. Authenticate and name the profile:
 
     ```bash
-    databricks auth login --host https://<your-workspace>.cloud.databricks.com
+    databricks auth login --host https://<your-workspace>.cloud.databricks.com --profile uaigw-demo
     ```
 
 3. Validate and deploy:
 
     ```bash
-    cd unity_ai_gateway_governance
-    databricks bundle validate
-    databricks bundle deploy
+    cd 'demos/2026 H2 conference demos/unity_ai_gateway_governance'
+    databricks bundle validate --profile uaigw-demo
+    databricks bundle deploy --profile uaigw-demo
     ```
 
-4. Open `ai_gateway_demo` in the workspace and run the acts. The notebook detects the Databricks runtime and pulls host and token from `dbutils`, so no `.env` is needed.
+4. Open the `ai_gateway_demo` notebook under the deployed bundle files. Run the dependency cell once, then run the configuration cell. It derives the host, token, and current user from the Databricks runtime and creates widgets for the model services, catalog, trace schema, experiment path, and Act 2 volume. Fill in the blank widgets and rerun the configuration cell before Act 1.
 
-> **Tip:** edit `databricks.yml` to change the target workspace or add targets such as staging and production.
+The bundle has no checked-in workspace host; `--profile` selects the destination.
 
 ## File structure
 
@@ -215,6 +227,7 @@ The project uses [Declarative Automation Bundles](https://docs.databricks.com/en
 unity_ai_gateway_governance/
 ├── databricks.yml          # Declarative Automation Bundle configuration
 ├── ai_gateway_demo.ipynb   # Demo notebook (runs locally and on Databricks)
+├── demo_config.py          # Validated local/Databricks configuration
 ├── gateway_config.py       # GatewayConfig + per-service verification and config lookup
 ├── agent_simulator.py      # SimulatedAgent, GatewayClient, policy-block detection, retries
 ├── scenarios.py            # Guardrail payloads (PII, injection, unsafe) + clean-scenario builder
@@ -223,5 +236,6 @@ unity_ai_gateway_governance/
 ├── observability.py        # SQL query templates for the inference tables
 ├── images/                 # Architecture diagram and screenshots
 ├── env-template            # Environment variable template (local runs)
+├── tests/                  # Configuration regression tests
 └── README.md
 ```

@@ -171,9 +171,9 @@ def get_clean_scenarios(per_agent: int | None = 1, interleave: bool = True) -> l
                 backend per-minute limits. Pass None for the full catalog
                 (five agents x 15 = 75 requests).
     interleave  round-robin across agents instead of grouping by agent. This
-                rotates the provider on every request (claude, claude, openai,
-                gemini, gemini, ...) so no single model service absorbs a long
-                run of consecutive calls — which matters if rate limits are
+                cycles through claude, claude, openai, gemini, gemini, so no
+                single model service absorbs a long run of consecutive calls —
+                which matters if rate limits are
                 configured. It also means an interrupted run still leaves every
                 agent with rows in its inference table.
     """
