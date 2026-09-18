@@ -48,7 +48,7 @@ No GitHub credentials are required. The demo reads public data and keeps all cod
 ```text
 Prepare this workspace for the Omnigent issue-triage demo.
 
-Verify that demos/omnigent exists, then run the documented setup for demos/omnigent/issue-triage. Do not modify git remotes.
+Verify that `demos/2026 H2 conference demos/omnigent` exists, then run the documented setup for `demos/2026 H2 conference demos/omnigent/issue-triage`. Do not modify git remotes.
 
 Run the naive issue-triage client against the public omnigent-ai/omnigent repository. Report the item count and top labels exactly as observed. Do not change source code or tests. Stop after reporting READY or a specific blocker.
 ```
@@ -72,7 +72,7 @@ The point is dependency-aware coordination across visible agent sessions, not si
 ## Prompt 2 — implement
 
 ```text
-Implement the issues from your investigation, working only under demos/omnigent/issue-triage. At minimum, add Link-header pagination first on branch feat/ghlite-pagination, with focused regression tests; then base branch feat/ghlite-filter-prs on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
+Implement the issues from your investigation, working only under `demos/2026 H2 conference demos/omnigent/issue-triage`. At minimum, add Link-header pagination first on branch feat/ghlite-pagination, with focused regression tests; then base branch feat/ghlite-filter-prs on that completed result and filter objects containing the pull_request key from the issue list, again with focused regression tests. Report any other findings as follow-up work rather than expanding this demo. Use separate local worktrees where appropriate. Keep all work local: do not push, open a pull request, or merge into the starting branch.
 
 If your standard review flow requires a pull request, stop after producing the local worktree changes and passing tests. Report that limitation clearly; do not try to configure GitHub credentials. Finish by reporting the final stacked branch and the exact fast-forward merge command for the presenter.
 ```
@@ -100,7 +100,7 @@ Do this quietly. It is a short workaround for Polly's no-merge boundary and the 
 Then send Polly:
 
 ```text
-I have fast-forwarded the reviewed branch into the starting branch. Run the full test suite under demos/omnigent/issue-triage. Then read the original starting commit from demos/omnigent/.demo-base and run git reset --mixed to that commit so the combined result remains as working-tree changes for the Omnigent Changes panel. Whether the tests pass or fail, perform the mixed reset and report git status --short. Do not push or modify origin.
+I have fast-forwarded the reviewed branch into the starting branch. Run the full test suite under `demos/2026 H2 conference demos/omnigent/issue-triage`. Then read the original starting commit from `demos/2026 H2 conference demos/omnigent/.demo-base` and run git reset --mixed to that commit so the combined result remains as working-tree changes for the Omnigent Changes panel. Whether the tests pass or fail, perform the mixed reset and report git status --short. Do not push or modify origin.
 ```
 
 ![Combined pagination changes in the Omnigent file viewer after Prompt 3.](assets/prompt-3-combined-diff.png)
@@ -117,7 +117,7 @@ The reviewed commits remain on `feat/ghlite-filter-prs`; the mixed reset exposes
 4. Send:
 
    ```text
-   Read demos/omnigent/README.md and summarize its first paragraph.
+   Read `demos/2026 H2 conference demos/README.md` and summarize the first paragraph under "Omnigent conference demo".
    ```
 
 5. Show the approval card and approve the read.
@@ -148,8 +148,8 @@ Requirements: local Omnigent, Python 3.12+, Node.js 22 LTS, npm, tmux, and at le
 git clone --depth 1 --filter=blob:none --sparse \
   https://github.com/databricks-solutions/devrel-examples.git omnigent-demo
 cd omnigent-demo
-git sparse-checkout set demos/omnigent
-cd demos/omnigent/issue-triage
+git sparse-checkout set 'demos/2026 H2 conference demos/omnigent'
+cd 'demos/2026 H2 conference demos/omnigent/issue-triage'
 ./scripts/setup.sh
 cd ../../..
 omni polly

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 GIT_ROOT=$(git -C "$ROOT" rev-parse --show-toplevel)
-DEMO_ROOT="$GIT_ROOT/demos/omnigent"
+DEMO_ROOT="$GIT_ROOT/demos/2026 H2 conference demos/omnigent"
 cd "$ROOT"
 
 if [[ ! -f "$DEMO_ROOT/.demo-base" ]]; then
