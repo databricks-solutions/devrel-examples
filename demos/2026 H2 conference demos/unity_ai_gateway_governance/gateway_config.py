@@ -18,6 +18,20 @@ MAX_RETRIES = 5
 INITIAL_BACKOFF = 2
 
 
+def _routed_model_name(destination: dict) -> str:
+    """Return the backing model rather than the destination's display label."""
+    model = (
+        (destination.get("pay_per_token_config") or {}).get("model")
+        or (destination.get("provisioned_throughput_config") or {}).get("model")
+        or (destination.get("external_model_config") or {}).get("name")
+        or destination.get("name", "")
+    )
+    for prefix in ("models/system.ai.", "system.ai.", "models/"):
+        if model.startswith(prefix):
+            return model.removeprefix(prefix)
+    return model
+
+
 @dataclass
 class GatewayConfig:
     endpoint_name: str
@@ -96,9 +110,7 @@ def fetch_service_config(host: str, token: str, model_service: str) -> dict:
     ]
 
     destinations = config.get("routing", {}).get("destinations", [])
-    routed_model = ""
-    if destinations:
-        routed_model = destinations[0].get("name", "").replace("system.ai.", "")
+    routed_model = _routed_model_name(destinations[0]) if destinations else ""
 
     # e.g. "tables/catalog.schema.name_payload" -> "catalog.schema.name_payload"
     table = (config.get("inference_table") or {}).get("table", "")
