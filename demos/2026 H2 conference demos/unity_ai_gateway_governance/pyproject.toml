@@ -5,16 +5,25 @@ description = "Databricks demo: govern coding-agent sprawl by routing agents thr
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "mlflow>=3.1.0",
-    "requests>=2.31.0",
-    "pandas>=2.0.0",
-    "python-dotenv>=1.0.0",
-    "openai>=1.0.0",
-    "jupyter>=1.0.0",
+    "mlflow>=3.1,<4",
+    "requests>=2.31,<3",
+    "pandas>=2,<4",
+    "python-dotenv>=1,<2",
+    "openai>=1,<4",
+    "jupyter>=1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+    "ruff>=0.8",
 ]
 
 # Demo notebook and modules only — not packaged or installed. Run `uv sync`
 # to create a local venv with these dependencies, then launch the notebook.
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
@@ -22,3 +31,18 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "agent_simulator",
+    "demo_config",
+    "gateway_config",
+    "observability",
+    "prompts",
+    "scenarios",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E501", "F821"]
+"clean_tasks.py" = ["E501"]
+"scenarios.py" = ["E501"]
