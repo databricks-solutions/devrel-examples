@@ -41,7 +41,7 @@ In workspace/omnigent:
 5. Leave the branch blank to use `main`.
 6. Paste Prompt 0.
 
-No GitHub credentials are required. The demo reads public data and keeps all code changes local.
+No GitHub credentials are required for a normal run. The demo reads public data and keeps all code changes local. Anonymous GitHub API access is limited to 60 requests per hour per source IP, so repeated rehearsals or booth traffic from shared egress can exhaust it. If that happens, use the completed session or set an optional `GITHUB_TOKEN` in the session environment for a higher authenticated limit.
 
 ## Prompt 0 — prepare and show the problem
 
@@ -151,7 +151,7 @@ cd omnigent-demo
 git sparse-checkout set 'demos/2026 H2 conference demos/omnigent'
 cd 'demos/2026 H2 conference demos/omnigent/issue-triage'
 ./scripts/setup.sh
-cd ../../..
+cd "$(git rev-parse --show-toplevel)"
 omni polly
 ```
 
@@ -163,6 +163,7 @@ Use Prompts 0–3. The OSS path does not include Databricks Sandbox or AI Gatewa
 |---|---|
 | Polly or Sandbox unavailable | Use the completed session or OSS fallback. |
 | Live work is slow | Continue with the completed session. |
+| GitHub returns `403` or reports a rate limit | Continue with the completed session. For another live run, wait for the anonymous limit to reset or set a `GITHUB_TOKEN` in the session environment. |
 | Fewer than two worker vendors available | Explain that Polly supports cross-vendor review, and note that this workspace did not have enough agent vendors available to demonstrate it live. |
 | Changes is empty after Prompt 3 | Confirm `git status --short` lists the demo files, then reload once. |
 | Policy does not trigger | Use a fresh ordinary session for the policy module. |
