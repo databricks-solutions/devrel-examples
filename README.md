@@ -8,8 +8,7 @@ This repository contains examples from the Developer Relations team @ Databricks
 - **[`demos/`](demos/)** — Self-contained demo projects:
   - [Arxiv Paper Analysis](demos/arxiv)
   - [Bee Pollinator Health Analysis](demos/bee-pollinator)
-  - [Governing Coding Agent Sprawl with Unity AI Gateway](demos/unity_ai_gateway_governance)
-  - [Omnigent Multi-Agent Conference Demo](demos/omnigent)
+  - [2026 H2 Conference Demos](demos/2026%20H2%20conference%20demos) — Omnigent and Unity AI Gateway
 
 ## How to use
 
