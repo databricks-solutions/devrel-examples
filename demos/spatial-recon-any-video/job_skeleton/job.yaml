@@ -1,0 +1,19 @@
+# Databricks AI Runtime (serverless GPU) job spec. Submit with the AIR CLI, e.g.:
+#   air run --file job.yaml -p <profile>          (or: databricks air run --file job.yaml -p <profile>)
+# Fill in the <...> placeholders. Inputs and outputs live on a Unity Catalog volume.
+experiment_name: any-video-recon
+mlflow_experiment_directory: <workspace-folder>/recon_jobs
+mlflow_run_name: <run_id>
+compute:
+  accelerator_type: GPU_1xA10          # GPU_1xH100 / GPU_8xH100 for big models; see SKILL.md
+  num_accelerators: 1
+environment:
+  version: databricks_ai_v6            # ships torch, numpy, opencv; don't pin those again
+code_source:
+  type: snapshot
+  snapshot:
+    root_path: .
+    include_paths: ["*.py", "*.sh", "job.yaml"]
+command: "bash \"$CODE_SOURCE_PATH/entry.sh\" --video /Volumes/<catalog>/<schema>/<volume>/inputs/<clip>.mp4 --run /Volumes/<catalog>/<schema>/<volume>/runs/<run_id> --max-frames 200 --mapper global"
+max_retries: 0
+timeout_minutes: 30                    # always set; queue time before start is not billed

@@ -8,6 +8,7 @@ This repository contains examples from the Developer Relations team @ Databricks
 - **[`demos/`](demos/)** — Self-contained demo projects:
   - [Arxiv Paper Analysis](demos/arxiv)
   - [Bee Pollinator Health Analysis](demos/bee-pollinator)
+  - [Spatial Reconstruction from Any Video](demos/spatial-recon-any-video) — video to camera poses, point cloud and Gaussian splat on serverless GPU
   - [2026 H2 Conference Demos](demos/2026%20H2%20conference%20demos) — Omnigent and Unity AI Gateway
 
 ## How to use
