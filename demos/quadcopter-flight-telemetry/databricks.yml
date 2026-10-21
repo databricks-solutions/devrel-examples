@@ -1,0 +1,31 @@
+# Quadcopter flight telemetry: a small, anonymised dataset (13 flights) in Unity Catalog, with a Genie space over it.
+#
+# Usage (from this folder):
+#   databricks bundle deploy              # first time: stops at the Genie space, its tables do not exist yet
+#   databricks bundle run load_release0   # loads data/*.parquet into Delta tables
+#   databricks bundle deploy              # creates the Genie space
+
+bundle:
+  name: quadcopter-flight-telemetry
+  # A Genie space as a bundle resource needs the direct deployment engine and CLI 1.3.0 or later.
+  engine: direct
+  databricks_cli_version: ">= 1.3.0"
+
+include:
+  - resources/*.yml
+
+# data/ is inside the bundle root, so it is synced with the bundle (to ${workspace.file_path}/data),
+# where the load job reads the parquet files.
+
+variables:
+  catalog:
+    description: Existing Unity Catalog catalog to create the schema in (you need USE CATALOG and CREATE SCHEMA on it).
+  schema:
+    description: Schema to create for the tables and the volume.
+    default: quadcopter_flights
+  warehouse_id:
+    description: ID of a Pro or serverless SQL warehouse for the Genie space.
+
+targets:
+  default:
+    default: true
