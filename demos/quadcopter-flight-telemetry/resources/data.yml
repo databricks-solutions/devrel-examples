@@ -1,0 +1,32 @@
+resources:
+  schemas:
+    release0:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: Release 0 flight telemetry of a sub-250 g consumer quadcopter (data CC-BY-4.0).
+
+  volumes:
+    release_files:
+      catalog_name: ${resources.schemas.release0.catalog_name}
+      schema_name: ${resources.schemas.release0.name}
+      name: release_files
+      volume_type: MANAGED
+      comment: The release files as published (parquet), copied here by the load job.
+
+  jobs:
+    load_release0:
+      name: Load quadcopter release 0
+      # Serverless: no cluster is defined, so the notebook task runs on serverless compute.
+      parameters:
+        - name: catalog
+          default: ${resources.schemas.release0.catalog_name}
+        - name: schema
+          default: ${resources.schemas.release0.name}
+        - name: volume
+          default: ${resources.volumes.release_files.name}
+        - name: source_dir
+          default: ${workspace.file_path}/data
+      tasks:
+        - task_key: load_tables
+          notebook_task:
+            notebook_path: ../src/load_release.py
