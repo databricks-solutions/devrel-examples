@@ -1,0 +1,89 @@
+resources:
+  genie_spaces:
+    quadcopter_wind:
+      title: Quadcopter Flight Telemetry
+      description: >-
+        Raw flight telemetry of a sub-250 g consumer quadcopter (release 0, 13 flights): pose, velocity, attitude,
+        the flight controller's wind estimate, battery, stick commands, and its autonomous charging-dock landings.
+        Genie works the answers out from the raw telemetry.
+      warehouse_id: ${var.warehouse_id}
+      # The space definition: tables, domain notes and plain sample questions (Genie's serialized format,
+      # https://docs.databricks.com/api/workspace/genie/createspace). Inline rather than file_path so the
+      # catalog and schema variables are substituted. On purpose there is no example SQL and no metric definition:
+      # Genie does the analysis itself. The blended_wind_reference table is loaded but not given to the space.
+      serialized_space: |
+        {
+          "version": 2,
+          "config": {
+            "sample_questions": [
+              {
+                "id": "a0000000000000000000000000000001",
+                "question": [
+                  "Which flight was the gustiest?"
+                ]
+              },
+              {
+                "id": "a0000000000000000000000000000002",
+                "question": [
+                  "How many of the dock landings seated?"
+                ]
+              },
+              {
+                "id": "a0000000000000000000000000000003",
+                "question": [
+                  "Which way was the wind blowing on each flight?"
+                ]
+              }
+            ]
+          },
+          "data_sources": {
+            "tables": [
+              {
+                "identifier": "${var.catalog}.${var.schema}.flights",
+                "description": [
+                  "One row per flight: site, session, kind, duration, airborne time, how it ended."
+                ]
+              },
+              {
+                "identifier": "${var.catalog}.${var.schema}.landings",
+                "description": [
+                  "One row per autonomous landing attempt on the charging dock."
+                ]
+              },
+              {
+                "identifier": "${var.catalog}.${var.schema}.telemetry",
+                "description": [
+                  "One row per flight-controller sample (about 10 Hz) per flight: pose, velocity, attitude, the flight controller's wind estimate, battery and sticks."
+                ]
+              }
+            ]
+          },
+          "instructions": {
+            "text_instructions": [
+              {
+                "id": "b0000000000000000000000000000001",
+                "content": [
+                  "The data\n",
+                  "- 13 flights of a sub-250 g consumer quadcopter. flights.kind: manual (the operator flies the sticks), automated_manoeuvres (the operator triggers automated manoeuvres such as dashes, orbits and figure-eights), system_identification (programmed stick excitation), autonomous_dock_cycle (an unattended take-off from a charging dock, a spiral approach and one landing attempt back on the dock).\n",
+                  "- t_s is seconds since the flight's first sample; there are no dates or clock times. session (day_1, day_2, day_3) orders the days. Ids are hashes, so show session and kind next to flight_id.\n",
+                  "- landings.outcome is the dock's own verdict, read through its charging contacts, and is exactly 'seated' (the aircraft ended seated on the dock) or 'not_seated' (it did not). Hand catches and ground landings are not dock landings.\n",
+                  "\n",
+                  "Units and frames\n",
+                  "- Units are in the column names (_m metres, _mps m/s, _deg degrees, _s seconds, _cm, _cmps).\n",
+                  "- Positions are relative to the take-off point: pos_x_m north, pos_y_m east, pos_z_m up. vel_down_mps is positive descending.\n",
+                  "- Angles are in degrees. heading_deg is the nose's compass bearing, clockwise from north. pitch_deg and roll_deg are the airframe's tilt about its own axes (relative to the nose, not to north): pitch positive nose up, roll positive right side down.\n",
+                  "- Wind directions are where the wind blows FROM, clockwise from north (0 = from the north, 90 = from the east), and wrap around at 360.\n",
+                  "\n",
+                  "Wind\n",
+                  "- All wind values are the aircraft's own estimates, not anemometer readings.\n",
+                  "- The flight controller reports wind speed (fc_wind_speed_mps) in 0.1 m/s steps and direction (fc_wind_from_deg) only in 45 degree sectors (0, 45, ..., 315).\n",
+                  "- The wind estimate is only meaningful while the aircraft flies clear of the ground: it reads 0 on the ground, is mostly noise within about 1 m of the ground (the dock cycles hover lower than that), and jumps at take-off, at touchdown and when the operator catches the aircraft by hand, which ends most of the non-dock flights.\n",
+                  "- In steady flight a multirotor tilts into the wind to hold its position.\n",
+                  "\n",
+                  "Flight state\n",
+                  "- motors_on is true while the motors spin. flight_phase: on_ground (motors off), taking_off (until the first climb stops), in_air, landing (the final descent, touchdown or hand catch, up to motor stop).\n"
+                ]
+              }
+            ]
+          }
+        }
