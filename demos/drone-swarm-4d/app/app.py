@@ -330,6 +330,12 @@ async def _nf(_, e: NotFound):
     return JSONResponse({"error": f"not found: {e}"}, status_code=404)
 
 
+@app.exception_handler(Exception)
+async def _err(request: Request, e: Exception):
+    log.exception("%s %s failed", request.method, request.url.path)
+    return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
+
+
 @app.get("/api/clips")
 def api_clips():
     out = []

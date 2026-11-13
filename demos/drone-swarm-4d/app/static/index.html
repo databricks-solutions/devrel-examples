@@ -279,8 +279,15 @@ function resetView() {
 }
 
 // ---------------------------------------------------------------- clips
+async function getJSON(url) {
+  const r = await fetch(url);
+  const text = await r.text();
+  if (!r.ok) throw new Error(`${r.status} ${text.slice(0, 200)}`);
+  return JSON.parse(text);
+}
+
 async function loadClips() {
-  const L = await (await fetch('api/clips')).json();
+  const L = await getJSON('api/clips');
   const seg = $('clips');
   seg.innerHTML = '';
   L.forEach(c => {
@@ -301,7 +308,9 @@ async function load(id) {
   history.replaceState(null, '', `?clip=${encodeURIComponent(id)}`);
   setPlaying(false);
   $('status').textContent = 'Loading…';
-  const meta = await (await fetch(`api/clips/${encodeURIComponent(id)}`)).json();
+  let meta;
+  try { meta = await getJSON(`api/clips/${encodeURIComponent(id)}`) }
+  catch (e) { if (my === gen) $('status').textContent = `Could not load ${id}: ${e.message}`; console.error(e); return }
   if (my !== gen) return;
   M = meta;
   // free the previous clip
