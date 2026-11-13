@@ -24,11 +24,12 @@ Every video frame carries the drone's own clock, so all drones, all frames and a
 | `resources/app.yml` | The App, with read access to the volume |
 | `src/load_release.py` | The load job's notebook: Hugging Face → volume (sha256-checked) → Delta tables with table and column comments |
 | `app/` | The App: a small FastAPI server (`app.py`) and the three.js viewer (`static/index.html`) |
-| `rebuild/` | The serverless GPU job for one moment: `job.yaml`, `entry.sh`, `rebuild_moment.py` |
+| `rebuild/` | The serverless GPU jobs: one moment (`job.yaml`, `rebuild_moment.py`) or the whole clip, shardable (`job_clip.yaml`, `recon4d_job.py`); shared `entry.sh` |
 | `guide/REBUILD_A_MOMENT.md` | Rebuild one moment with Pi3X on serverless GPU and compare it with the release |
 | `data/README.md` | Where the data lives and how it is laid out |
 | `tests/` | Local checks: a synthetic release in the same layout, a PySpark run of the load notebook, headless screenshots of the App, the hero recording |
 | `SKILL.md` | A short agent skill: deploy, open the App, run the rebuild |
+| `skills/reconstruct-4d/SKILL.md` | An agent skill for 4D reconstruction from a few moving cameras on AI Runtime: the full method, its numbers and the AIR practices behind it |
 
 `SKILL.md` has skill front matter, so an AI coding agent can use it directly: for Claude Code, copy this folder to `.claude/skills/drone-swarm-4d/` in your project (or `~/.claude/skills/`); for other agents, add it as a skill or instructions file.
 

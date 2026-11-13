@@ -8,7 +8,7 @@ video/drone_N.mp4, masks/drone_N.mkv, optionally cloud/ to compare against). You
 is in that layout: per-frame times on one clock, camera-to-world poses, intrinsics, and a person mask per frame.
 
 Per slice: the frame of every camera nearest the slice time goes into Pi3X with its intrinsics and pose (see
-pi3x_instant.py, which is also the single-instant tool). The model's cameras are aligned to the given poses with a
+rebuild_moment.py, which is also the single-moment tool). The model's cameras are aligned to the given poses with a
 Sim(3). Pass two smooths the per-slice Sim(3) over time (a centred window of --smooth slices: mean translation and
 chordal-mean rotation; scale stays per slice): that is what takes the frame-to-frame shake away. Then each view's person points
 are cut, fused across cameras and written in the release cloud format (int16 mm xyz + uint8 rgb, 9 bytes per point),
@@ -35,7 +35,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-import pi3x_instant as pi  # the single-instant module: model, Sim(3), person cut, fusion, cloud I/O
+import rebuild_moment as pi  # the single-moment module: model, Sim(3), person cut, fusion, cloud I/O
 
 T0 = time.time()
 RUN_ID = os.environ.get("MLFLOW_RUN_ID")  # capture now, before any library can pop it
@@ -263,7 +263,7 @@ def run(a) -> dict:
                             scale=round(s, 5), cam_rot_err_deg=align[j], chamfer_cm=cmp.get("chamfer_cm")))
     timings["write"] = round(time.time() - t, 1)
 
-    report = dict(format="multiview-4d/run/v1", clip=a.clip, shard=a.shard, slices=[lo, hi], n_cameras=len(drones),
+    report = dict(format="drone-swarm-4d/clip/v1", clip=a.clip, shard=a.shard, slices=[lo, hi], n_cameras=len(drones),
                   settings=dict(smooth=a.smooth, up=a.up, min_conf=a.min_conf, fuse_cm=a.fuse_cm, model=a.model),
                   median_points=int(np.median([w["n"] for w in written])) if written else 0,
                   median_chamfer_cm=float(np.median(chamfer)) if chamfer else None, seconds=timings)

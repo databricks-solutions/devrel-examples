@@ -1,11 +1,11 @@
 ---
-name: multiview-4d-on-databricks
+name: reconstruct-4d
 description: Reconstruct a moving person (or any dynamic subject) in 4D, as a time-varying coloured point cloud, from 2 or more synchronised moving cameras such as drones, phones or robots, on Databricks serverless GPU (AI Runtime). Covers clock sync, person masks, camera tracks with Depth Anything 3, per-instant Pi3X with known poses, seam-free merging, temporal smoothing, QA, and running it reliably on AIR (sharding, progress and ETA through MLflow, smoke tests, hard exits, caching). Use when planning, building, running or debugging a multi-camera 4D pipeline, or choosing AIR shapes for one.
 ---
 
 # 4D reconstruction from a few moving cameras, on Databricks AI Runtime
 
-This recipe comes from a working capture: 2–3 small consumer drones filming one person outdoors from 2–5 m away, rebuilt at 29.97 slices per second with 40–110 k points per slice. The released result is the public dataset [`nick-karpov/drone-swarm-4d`](https://huggingface.co/datasets/nick-karpov/drone-swarm-4d), and the [drone-swarm-4d demo](../drone-swarm-4d/) is its viewer. The numbers are from those runs. Use them as starting points, not as guarantees.
+This recipe comes from a working capture: 2–3 small consumer drones filming one person outdoors from 2–5 m away, rebuilt at 29.97 slices per second with 40–110 k points per slice. The released result is the public dataset [`nick-karpov/drone-swarm-4d`](https://huggingface.co/datasets/nick-karpov/drone-swarm-4d), and [this demo](../../README.md) is its viewer. The numbers are from those runs. Use them as starting points, not as guarantees.
 
 The core idea is to split the problem in two. One model tracks **where every camera was through the whole clip**. Another builds **the subject's shape at each instant** from all the cameras' frames for that instant, conditioned on those poses. Everything else is sync, masks, alignment and clean-up.
 
@@ -87,7 +87,7 @@ N videos + per-frame clock ─► 1 sync ─► 2 masks ─► 3 camera tracks (
 - `cloud/sNNN.bin`: little-endian, 9 bytes per point (int16 x, y, z in mm, then uint8 r, g, b).
 - `cloud/index.json`: `{format, fps, slices: [{i, t_s, file, n}], bounds}`.
 - The clip frame is in metres, z up, with the origin on the floor under the subject at slice 0.
-- The [drone-swarm-4d App](../drone-swarm-4d/) plays this format directly.
+- The demo's [App](../../app/) plays this format directly.
 
 ## 8. QA: score it against what a camera really saw
 
@@ -149,24 +149,24 @@ The heavy stages are short, independent GPU tasks, which suits AIR well. Across 
 
 ## 11. Job skeleton
 
-`job_skeleton/` runs steps 4, 5 (per-slice alignment smoothing and cross-view fusion) and 7 on a clip in the release layout:
-- `recon4d_job.py`: the clip driver. It handles shards with a halo, a single decode pass per video, per-slice Pi3X, Sim(3), smoothing, person cut and fusion, writing clouds and per-shard index, report and manifest files, MLflow progress and a hard exit.
-- `pi3x_instant.py`: one instant, which is also a standalone tool. Its `--model stub` option exercises everything without a GPU.
-- `entry.sh`, `job.yaml`: the AIR job.
+The demo's [`rebuild/`](../../rebuild/) folder runs steps 4, 5 (per-slice alignment smoothing and cross-view fusion) and 7 on a clip in the release layout:
+- `recon4d_job.py`: the whole clip. It handles shards with a halo, a single decode pass per video, per-slice Pi3X, Sim(3), smoothing, person cut and fusion, writing clouds and per-shard index, report and manifest files, MLflow progress and a hard exit.
+- `rebuild_moment.py`: one moment, which `recon4d_job.py` builds on. Its `--model stub` option exercises everything without a GPU.
+- `entry.sh` (shared), `job_clip.yaml` (the whole clip) and `job.yaml` (one moment): the AIR jobs.
 
 **Check the plumbing locally in seconds** with the synthetic fixture from the drone-swarm-4d demo:
 
 ```bash
-python ../drone-swarm-4d/tests/make_fixture.py /tmp/fx
-cd job_skeleton
+python ../../tests/make_fixture.py /tmp/fx
+cd ../../rebuild
 python recon4d_job.py --release /tmp/fx --clip clip1_three_drones --out /tmp/r4d --model stub --device cpu
 ```
 
 **Then on AIR:**
 1. Upload a clip in the release layout to a volume.
-2. Fill in the `<...>` placeholders in `job.yaml`.
+2. Fill in the `<...>` placeholders in `job_clip.yaml`.
 3. Smoke-test with `--max-slices 10`.
-4. Submit one job per shard: `air run --file job.yaml -p <profile>`.
+4. Submit one job per shard: `air run --file job_clip.yaml -p <profile>`.
 
 To reproduce the release's camera tracks (step 3), the seam-free merge, the spline smoothing and the colour fit, follow the settings above. The skeleton keeps the per-slice path simple and testable.
 

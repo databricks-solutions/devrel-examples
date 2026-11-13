@@ -53,7 +53,11 @@ air run --file job.yaml -p <profile>     # or: databricks air run --file job.yam
 - Read `sNNN.json`: `comparison.chamfer_cm`, the point counts, and `alignment.camera_rotation_error_deg` / `camera_centre_error_cm` (how far Pi3X moved the cameras it was given).
 - The job prints a start marker, one line per stage, and exits non-zero on any error. Check the run's output before re-running.
 
-## 5. Tear down
+## 5. Rebuild a whole clip, or your own capture
+
+`rebuild/recon4d_job.py` rebuilds every slice of a clip, split over independent AIR jobs if you like (`job_clip.yaml`, `--shard i/N`). For the full method (sync, masks, camera tracks, merging, smoothing, QA, how many cameras) and the AIR practices behind it, use the skill in [`skills/reconstruct-4d/SKILL.md`](skills/reconstruct-4d/SKILL.md).
+
+## 6. Tear down
 
 ```bash
 databricks bundle destroy

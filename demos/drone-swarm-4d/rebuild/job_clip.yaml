@@ -1,8 +1,8 @@
 # AIR (serverless GPU) job: 4D reconstruction of a clip, one task per shard. Submit with
-#   air run --file job.yaml -p <profile>        (or: databricks air run --file job.yaml -p <profile>)
+#   air run --file job_clip.yaml -p <profile>   (or: databricks air run --file job_clip.yaml -p <profile>)
 # For N shards, submit N copies with --shard 0/N ... N-1/N (one job each: independent tasks, no shared state).
-experiment_name: multiview-4d
-mlflow_experiment_directory: <workspace-folder>/multiview_4d
+experiment_name: drone-swarm-4d-clip
+mlflow_experiment_directory: <workspace-folder>/clip_jobs
 mlflow_run_name: <clip>_shard0of1
 compute:
   accelerator_type: GPU_1xA10          # Pi3X at 672x378 on 2-6 views: ~8 GiB in bf16; an H100 is ~3x the price for little gain
@@ -13,7 +13,7 @@ code_source:
   type: snapshot
   snapshot:
     root_path: .
-    include_paths: ["*.py", "*.sh", "job.yaml"]
-command: "bash \"$CODE_SOURCE_PATH/entry.sh\" --release /Volumes/<catalog>/<schema>/<volume>/release --clip <clip> --out /Volumes/<catalog>/<schema>/<volume>/recon4d --shard 0/1"
+    include_paths: ["*.py", "*.sh", "*.yaml"]
+command: "bash \"$CODE_SOURCE_PATH/entry.sh\" recon4d_job.py --release /Volumes/<catalog>/<schema>/release_files/release --clip <clip> --out /Volumes/<catalog>/<schema>/release_files/recon4d --shard 0/1"
 max_retries: 0                         # retries hide bugs and double-bill; re-submit by hand after reading the log
 timeout_minutes: 60                    # always set; the job also has an in-process watchdog

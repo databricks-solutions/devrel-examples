@@ -1,7 +1,0 @@
-line-length = 140
-
-[lint]
-select = ["E", "F", "W", "B"]
-
-[lint.per-file-ignores]
-"src/load_release.py" = ["E402"]   # notebook: imports follow the %pip cell
