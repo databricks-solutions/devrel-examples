@@ -1,0 +1,30 @@
+# Drone swarm 4D: a person filmed by a small drone swarm, rebuilt in 4D, in Unity Catalog, with a viewer App.
+#
+# Usage (from this folder):
+#   databricks bundle deploy                  # schema, volume, load job and the App
+#   databricks bundle run load_release        # downloads the release from Hugging Face into the volume, writes the tables
+#   databricks bundle run viewer              # deploys and starts the App
+
+bundle:
+  name: drone-swarm-4d
+  engine: direct
+  databricks_cli_version: ">= 1.3.0"
+
+include:
+  - resources/*.yml
+
+sync:
+  exclude:
+    - tests/**
+    - rebuild/**
+
+variables:
+  catalog:
+    description: Existing Unity Catalog catalog to create the schema in (you need USE CATALOG and CREATE SCHEMA on it).
+  schema:
+    description: Schema to create for the tables and the volume.
+    default: drone_swarm_4d
+
+targets:
+  default:
+    default: true
