@@ -1,0 +1,25 @@
+# AIR (serverless GPU) job: 4D reconstruction of a clip, one task per shard. Submit with
+#   air run --file job_clip.yaml -p <profile>
+# For N shards, submit N copies with --shard 0/N ... N-1/N (one job each: independent tasks, no shared state).
+experiment_name: drone-swarm-4d-clip
+mlflow_experiment_directory: /Workspace/Users/<you>/clip_jobs
+mlflow_run_name: <clip>_shard0of1
+compute:
+  accelerator_type: GPU_1xA10          # Pi3X at 672x378 on 2-6 views: ~8 GiB in bf16; an H100 is ~3x the price for little gain
+  num_accelerators: 1
+environment:
+  version: databricks_ai_v6            # ships torch, numpy, opencv: don't pin those again
+  dependencies:                        # only what the base lacks (Pi3X itself is installed by entry.sh)
+    - safetensors==0.6.2
+    - huggingface_hub==0.36.0
+    - pyarrow==21.0.0
+    - scipy==1.15.3
+    - imageio-ffmpeg==0.6.0
+code_source:
+  type: snapshot
+  snapshot:
+    root_path: .
+    include_paths: ["entry.sh", "rebuild_moment.py", "recon4d_job.py"]   # file names, not globs
+command: "bash \"$CODE_SOURCE_PATH/entry.sh\" recon4d_job.py --release /Volumes/<catalog>/<schema>/release_files/release --clip <clip> --out /Volumes/<catalog>/<schema>/release_files/recon4d --shard 0/1"
+max_retries: 0                         # retries hide bugs and double-bill; re-submit by hand after reading the log
+timeout_minutes: 60                    # always set; the job also has an in-process watchdog

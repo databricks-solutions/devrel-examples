@@ -1,0 +1,36 @@
+resources:
+  schemas:
+    release:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: A person filmed by a small drone swarm and rebuilt in 4D (data CC-BY-4.0, huggingface.co/datasets/nick-karpov/drone-swarm-4d).
+
+  volumes:
+    release_files:
+      catalog_name: ${resources.schemas.release.catalog_name}
+      schema_name: ${resources.schemas.release.name}
+      name: release_files
+      volume_type: MANAGED
+      comment: The release as published (release/), and rebuilt moments from the GPU hands-on (rebuilds/).
+
+  jobs:
+    load_release:
+      name: Load drone swarm 4D release
+      # Serverless: no cluster is defined, so the notebook task runs on serverless compute.
+      parameters:
+        - name: catalog
+          default: ${resources.schemas.release.catalog_name}
+        - name: schema
+          default: ${resources.schemas.release.name}
+        - name: volume
+          default: ${resources.volumes.release_files.name}
+        - name: hf_repo
+          default: nick-karpov/drone-swarm-4d
+        - name: hf_revision
+          default: main
+        - name: source_dir
+          default: ""
+      tasks:
+        - task_key: load_tables
+          notebook_task:
+            notebook_path: ../src/load_release.py

@@ -1,0 +1,19 @@
+resources:
+  apps:
+    viewer:
+      name: drone-swarm-4d
+      description: Explore a person filmed by a drone swarm in 4D, with every drone's camera and video in sync.
+      source_code_path: ../app
+      config:
+        command: ["python", "app.py"]
+        env:
+          - name: DRONE4D_VOLUME
+            value: /Volumes/${resources.volumes.release_files.catalog_name}/${resources.volumes.release_files.schema_name}/${resources.volumes.release_files.name}
+      # The app's service principal gets READ VOLUME on the release volume; the app reads it through the Files API.
+      resources:
+        - name: release-files
+          description: The release and the rebuilt moments.
+          uc_securable:
+            securable_full_name: ${resources.volumes.release_files.catalog_name}.${resources.volumes.release_files.schema_name}.${resources.volumes.release_files.name}
+            securable_type: VOLUME
+            permission: READ_VOLUME

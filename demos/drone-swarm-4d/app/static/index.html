@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drone Swarm 4D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%231f6f8b%22/%3E%3C/svg%3E">
+<style>
+:root{--scene:#16181c;--hud:#e6ebe8;--hudbg:rgba(22,24,28,.66);--hudline:rgba(255,255,255,.14);--hudaccent:#7cc8dc}
+:root{color-scheme:light;--bg:#f4f4f1;--panel:#ffffff;--fg:#1f2528;--muted:#5f6b70;--line:#d9ddda;--accent:#1f6f8b;--on:#fff;}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#101518;--panel:#182025;--fg:#ecf0ed;--muted:#9eacb3;--line:#2e3a41;--accent:#7cc8dc;--on:#06171c;}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#101518;--panel:#182025;--fg:#ecf0ed;--muted:#9eacb3;--line:#2e3a41;--accent:#7cc8dc;--on:#06171c;}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:1400px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:10px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.1px;white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;border-radius:0;background:transparent;color:var(--fg);padding:0 12px;min-height:34px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.spacer{flex:1}
+.icon{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:9px;min-height:34px;min-width:34px;padding:0 9px;font:inherit;font-size:14px;cursor:pointer}
+#view{position:relative;flex:1 1 auto;min-height:220px;border:1px solid var(--scene);border-radius:12px;overflow:hidden;background:var(--scene)}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;font-size:12.5px;color:var(--hud);background:var(--hudbg);border-radius:7px;padding:3px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#status{left:8px;top:8px;pointer-events:none}
+#viewbtns{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+#viewbtns .icon{min-height:30px;font-size:13px;background:var(--hudbg);color:var(--hud);border-color:var(--hudline);backdrop-filter:blur(4px)}
+#viewbtns .icon[aria-pressed=true]{border-color:var(--hudaccent);color:var(--hudaccent)}
+#rebuildbar .seg{background:transparent;border-color:var(--hudline)}
+#rebuildbar .seg button{color:var(--hud)}
+#rebuildbar .seg button+button{border-color:var(--hudline)}
+#rebuildbar .seg button[aria-pressed=true]{background:var(--hudaccent);color:#06171c}
+/* ?hero=1: the 4D view alone, full window, no chrome (for recording) */
+body.hero #app{max-width:none;padding:0;height:100vh}
+body.hero header,body.hero #videos,body.hero #controls,body.hero .hud,body.hero #viewbtns,body.hero .tag{display:none!important}
+body.hero #view{border:0;border-radius:0}
+#rebuildbar{left:8px;bottom:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px}
+#rebuildbar .seg button{min-height:28px;font-size:13px;padding:0 9px}
+#rbinfo{max-width:min(520px,70vw)}
+#rbinfo a{color:var(--accent);cursor:pointer}
+.tag{position:absolute;left:0;top:0;font-size:12px;font-weight:600;color:#fff;padding:1px 6px;border-radius:6px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-140%);text-shadow:0 1px 1px rgba(0,0,0,.35)}
+#videos{display:flex;justify-content:center;gap:8px;flex:0 0 auto}
+.vid{position:relative;flex:1 1 0;min-width:0;max-width:calc(22vh * 16 / 9);border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;aspect-ratio:16/9}
+.vid video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.vid span{position:absolute;left:6px;top:5px;font-size:12px;z-index:1;font-weight:600;color:#fff;padding:0 6px;border-radius:6px}
+#controls{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;flex:0 0 auto}
+#play{min-width:44px;min-height:40px;border-radius:50%;border:0;background:var(--accent);color:var(--on);cursor:pointer;display:grid;place-items:center}
+#play svg{width:18px;height:18px;fill:currentColor}
+#tl{position:relative;flex:1}
+#t{width:100%;accent-color:var(--accent);margin:0;height:28px}
+#rbmark{position:absolute;top:-4px;width:2px;height:8px;background:#e8833a;border-radius:1px;display:none;pointer-events:none}
+#time{font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--muted);white-space:nowrap;min-width:92px;text-align:right}
+@media (max-width:640px){
+  #app{padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px}
+  h1{font-size:15px}
+  #clips{order:3;width:100%}
+  #clips button{flex:1 1 0;white-space:normal;line-height:1.2;padding:4px 8px}
+  .seg button{padding:0 9px;font-size:13px}
+  #view{min-height:46dvh}
+  #videos{gap:6px}
+  .vid{max-width:none}
+  .vid span{font-size:11px;left:4px;top:3px;padding:0 4px}
+  #controls{gap:8px;padding:6px 8px}
+  #time{min-width:0;font-size:12.5px}
+  #status{top:46px;font-size:12px}
+  #rbinfo{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Drone Swarm 4D</h1>
+    <div class="seg" id="clips" role="group" aria-label="Clip"></div>
+    <span class="spacer"></span>
+    <button class="icon" id="theme" aria-label="Toggle light or dark theme" title="Theme">Theme</button>
+  </header>
+  <div id="view">
+    <div class="hud" id="status">Loading…</div>
+    <div id="viewbtns">
+      <button class="icon" id="orbit" aria-pressed="false" title="Slowly orbit the person">Orbit</button>
+      <button class="icon" id="follow" aria-pressed="true" title="Keep the person centred">Follow</button>
+      <button class="icon" id="reset" title="Reset the view">Reset</button>
+    </div>
+    <div class="hud" id="rebuildbar">
+      <div class="seg" id="rbmode" role="group" aria-label="Which cloud">
+        <button data-m="release" aria-pressed="true">Release</button><button data-m="rebuild" aria-pressed="false">Your rebuild</button><button data-m="both" aria-pressed="false">Both</button>
+      </div>
+      <span id="rbinfo"></span>
+    </div>
+  </div>
+  <div id="videos"></div>
+  <div id="controls">
+    <button id="play" aria-label="Play"><svg viewBox="0 0 24 24"><path id="playicon" d="M7 4.5v15l12.5-7.5z"/></svg></button>
+    <div id="tl"><input id="t" type="range" min="0" max="10000" value="0" step="1" aria-label="Time"><div id="rbmark"></div></div>
+    <div id="time">0.00 s</div>
+  </div>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const $ = id => document.getElementById(id), root = document.documentElement;
+const HEX = ['#e5484d', '#3e8ed0', '#3fae5a', '#b26bd6', '#d98e1a', '#1fa5a0'];
+const REBUILD_TINT = [0.95, 0.52, 0.16];
+const qs = new URLSearchParams(location.search);
+const WIN = +qs.get('win') || 1e9;   // ?win=N keeps only N slices each side of the one shown (very low-memory devices)
+const coarse = matchMedia('(pointer:coarse)').matches;
+const HERO = qs.get('hero') === '1';   // ?hero=1: view only, time and orbit advanced by window.drone4d.step(dt)
+if (HERO) document.body.classList.add('hero');
+
+// ---------------------------------------------------------------- theme
+try { const s = localStorage.getItem('drone4d-theme'); if (s) root.dataset.theme = s } catch (e) {}
+const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+$('theme').onclick = () => {
+  root.dataset.theme = isDark() ? 'light' : 'dark';
+  try { localStorage.setItem('drone4d-theme', root.dataset.theme) } catch (e) {}
+};
+
+// ---------------------------------------------------------------- three
+const box = $('view');
+const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+box.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(+new URLSearchParams(location.search).get('fov') || 50, 1, 0.02, 400);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.12;
+controls.autoRotateSpeed = +qs.get('orbit') || 2.5;   // 60 / speed seconds per turn
+function size() {
+  const r = box.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / Math.max(1, r.height);
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(size).observe(box);
+size();
+
+// The scene is the same in both themes: near-black, the person and the frustums only.
+scene.background = new THREE.Color(getComputedStyle(root).getPropertyValue('--scene').trim());
+
+// Person points: round discs sized in world units from the local point spacing, so surfaces stay closed at any zoom.
+const matSolid = new THREE.PointsMaterial({size: 1, sizeAttenuation: true, vertexColors: true});
+matSolid.onBeforeCompile = sh => {
+  sh.vertexShader = sh.vertexShader
+    .replace('uniform float size;', 'uniform float size;\nattribute float psize;')
+    .replace('gl_PointSize = size;', 'gl_PointSize = size * psize * projectionMatrix[1][1];')
+    .replace('#include <fog_vertex>', 'gl_PointSize = clamp(gl_PointSize, 1.0, 64.0);\n#include <fog_vertex>');
+  sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'void main() {\n\tvec2 cxy = 2.0 * gl_PointCoord - 1.0; if (dot(cxy, cxy) > 1.0) discard;');
+};
+const matRebuild = matSolid.clone();
+matRebuild.onBeforeCompile = matSolid.onBeforeCompile;
+// "Both": the rebuild drawn in one flat colour over the release, so the two are easy to tell apart
+const matRebuildFlat = new THREE.PointsMaterial({size: 0.8, sizeAttenuation: true, vertexColors: false, color: new THREE.Color(...REBUILD_TINT)});
+matRebuildFlat.onBeforeCompile = matSolid.onBeforeCompile;
+
+function spacing(p, n) {
+  // per-point disc size: 1.6 x the local spacing in 3 cm cells, clamped 2 mm..2 cm; sparse cells (stray points) stay small
+  const c = 0.03, cnt = new Map(), key = new Float64Array(n), ps = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = (Math.floor(p[3*i] / c) + 4096) + 8192 * ((Math.floor(p[3*i+1] / c) + 4096) + 8192 * (Math.floor(p[3*i+2] / c) + 4096));
+    key[i] = k; cnt.set(k, (cnt.get(k) || 0) + 1);
+  }
+  for (let i = 0; i < n; i++) { const m = cnt.get(key[i]); ps[i] = m < 4 ? 0.004 : Math.min(0.02, Math.max(0.002, 1.6 * c / Math.sqrt(m))) }
+  return ps;
+}
+
+// One cloud file (int16 x, y, z mm + uint8 r, g, b; 9 bytes per point) -> geometry.
+// Colours stay bytes (normalised attribute); positions and sizes are dropped from JS once uploaded to the GPU,
+// so a phone can hold every slice of a clip.
+function geom(buf) {
+  const n = Math.floor(buf.byteLength / 9), dv = new DataView(buf), a = new Uint8Array(buf);
+  const p = new Float32Array(n * 3), c = new Uint8Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const o = 9 * i;
+    for (let k = 0; k < 3; k++) {
+      p[3*i+k] = dv.getInt16(o + 2*k, true) / 1000;
+      c[3*i+k] = a[o+6+k];
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3, true));
+  g.setAttribute('psize', new THREE.BufferAttribute(spacing(p, n), 1));
+  // the person's centre: median height, mean x/y of the points near it (for "follow")
+  const z = [];
+  for (let i = 0; i < n; i += 7) z.push(p[3*i+2]);
+  z.sort((x, y) => x - y);
+  const zm = z[Math.floor(z.length / 2)] ?? 0.9;
+  let sx = 0, sy = 0, m = 0;
+  for (let i = 0; i < n; i += 7) if (Math.abs(p[3*i+2] - zm) < 0.4) { sx += p[3*i]; sy += p[3*i+1]; m++ }
+  g.userData.centre = m ? new THREE.Vector3(sx / m, sy / m, zm) : null;
+  g.userData.n = n;
+  g.computeBoundingSphere();
+  const free = function () { this.array = null };
+  for (const k of ['position', 'color', 'psize']) g.attributes[k].onUpload(free);
+  return g;
+}
+
+const person = new THREE.Points(new THREE.BufferGeometry(), matSolid);
+person.frustumCulled = false;
+scene.add(person);
+const rebuild = new THREE.Points(new THREE.BufferGeometry(), matRebuild);
+rebuild.frustumCulled = false;
+rebuild.visible = false;
+scene.add(rebuild);
+
+// ---------------------------------------------------------------- state
+let M = null, gen = 0, sl = [], loaded = 0, cur = 0, time = 0, playing = false, marks = [], tags = [], vids = [];
+let RB = [], rbIdx = 0, rbMode = 'release', rbGeom = null, lastCentre = null, follow = true;
+const slT = () => M.slices.map(s => s.t_s);
+
+function bisect(arr, t) {   // last index with arr[i] <= t (0 if none)
+  let lo = 0, hi = arr.length - 1;
+  if (!arr.length || t < arr[0]) return 0;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (arr[mid] <= t) lo = mid; else hi = mid - 1 }
+  return lo;
+}
+const m4 = a => new THREE.Matrix4().fromArray(a).transpose();   // row-major 16 floats -> Matrix4
+
+// ---------------------------------------------------------------- frustums
+function frustum(d, i) {
+  // a wire pyramid from K and the image size (OpenCV camera: x right, y down, z forward), 0.45 m deep,
+  // with a faint image plane and an "up" tick on the top edge
+  const g = new THREE.Group(), col = HEX[i % HEX.length], K = M.intrinsics[d] || {};
+  const W = K.width || 1920, H = K.height || 1080, fx = K.fx || W, fy = K.fy || fx, cx = K.cx ?? W / 2, cy = K.cy ?? H / 2, z = 0.45;
+  const P = (u, v) => new THREE.Vector3((u - cx) / fx * z, (v - cy) / fy * z, z);
+  const a = new THREE.Vector3(), tl = P(0, 0), tr = P(W, 0), br = P(W, H), bl = P(0, H), up = P(W / 2, -0.18 * H);
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([a, tl, a, tr, a, br, a, bl, tl, tr, tr, br, br, bl, bl, tl, tl, up, up, tr]),
+    new THREE.LineBasicMaterial({color: col})));
+  g.add(new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([tl, tr, br, tl, br, bl]),
+    new THREE.MeshBasicMaterial({color: col, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false})));
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), new THREE.MeshBasicMaterial({color: col})));
+  g.matrixAutoUpdate = false;
+  return g;
+}
+function placeMarks(k) {
+  M.drones.forEach((d, i) => marks[i].matrix.copy(m4(M.cams[d][k])));
+}
+const tmpV = new THREE.Vector3();
+function placeTags() {
+  const r = box.getBoundingClientRect();
+  M.drones.forEach((d, i) => {
+    tmpV.setFromMatrixPosition(marks[i].matrix).project(camera);
+    const on = tmpV.z < 1 && Math.abs(tmpV.x) < 1.05 && Math.abs(tmpV.y) < 1.05;
+    tags[i].style.display = on ? '' : 'none';
+    if (!on) return;
+    const w = tags[i].offsetWidth, x = Math.min(r.width - w / 2 - 4, Math.max(w / 2 + 4, (tmpV.x + 1) / 2 * r.width));   // keep labels inside the view
+    tags[i].style.transform = `translate(${x}px,${Math.max(24, (1 - tmpV.y) / 2 * r.height)}px) translate(-50%,-150%)`;
+  });
+}
+
+// ---------------------------------------------------------------- camera
+function centreAt(k) {
+  for (let d = 0; d < 12; d++) { const g = sl[k - d] || sl[k + d]; if (g && g.userData.centre) return g.userData.centre.clone() }
+  if (M.bounds && M.bounds.min) return new THREE.Vector3(...M.bounds.min.map((v, j) => (v + M.bounds.max[j]) / 2));
+  return new THREE.Vector3(0, 0, 0.9);
+}
+function resetView() {
+  const p = centreAt(cur), m = new THREE.Vector3();
+  let far = 2;
+  M.drones.forEach(d => {
+    const q = new THREE.Vector3().setFromMatrixPosition(m4(M.cams[d][cur])).sub(p);
+    far = Math.max(far, Math.hypot(q.x, q.y)); q.z = 0; m.add(q.normalize());
+  });
+  if (m.length() < 0.2) m.set(1, 0, 0);
+  m.normalize().applyAxisAngle(new THREE.Vector3(0, 0, 1), 0.6);
+  const dist = Math.max(4, far * 1.9) / Math.min(1, Math.max(0.55, camera.aspect * 1.25)) / (+qs.get('zoom') || 1) * Math.tan(25 * Math.PI / 180) / Math.tan(camera.fov / 2 * Math.PI / 180);   // same framing at any ?fov=   // portrait screens: step back
+  camera.position.set(p.x + m.x * dist, p.y + m.y * dist, p.z + dist * 0.6);
+  controls.target.copy(p);
+  controls.update();
+  lastCentre = p;
+}
+
+// ---------------------------------------------------------------- clips
+async function getJSON(url) {
+  const r = await fetch(url);
+  const text = await r.text();
+  if (!r.ok) throw new Error(`${r.status} ${text.slice(0, 200)}`);
+  return JSON.parse(text);
+}
+
+async function loadClips() {
+  const L = await getJSON('api/clips');
+  const seg = $('clips');
+  seg.innerHTML = '';
+  L.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.title || c.id;
+    b.title = `${c.id} · ${c.n_drones} drones`;
+    b.dataset.id = c.id;
+    b.onclick = () => load(c.id);
+    seg.append(b);
+  });
+  const want = qs.get('clip');
+  load(L.some(c => c.id === want) ? want : L[0].id);
+}
+
+async function load(id) {
+  const my = ++gen;
+  [...$('clips').children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+  history.replaceState(null, '', `?clip=${encodeURIComponent(id)}`);
+  setPlaying(false);
+  $('status').textContent = 'Loading…';
+  let meta;
+  try { meta = await getJSON(`api/clips/${encodeURIComponent(id)}`) }
+  catch (e) { if (my === gen) $('status').textContent = `Could not load ${id}: ${e.message}`; console.error(e); return }
+  if (my !== gen) return;
+  M = meta;
+  // free the previous clip
+  sl.forEach(g => g && g.dispose());
+  person.geometry = new THREE.BufferGeometry();
+  marks.forEach(m => scene.remove(m)); tags.forEach(t => t.remove());
+  marks = M.drones.map((d, i) => { const g = frustum(d, i); scene.add(g); return g });
+  tags = M.drones.map((d, i) => { const t = document.createElement('div'); t.className = 'tag'; t.textContent = d; t.style.background = HEX[i % HEX.length]; box.append(t); return t });
+  // videos
+  vids.forEach(v => { v.removeAttribute('src'); v.load() });
+  const vbox = $('videos');
+  vbox.innerHTML = '';
+  vids = M.drones.filter(d => M.video[d]).map(d => {
+    const i = M.drones.indexOf(d), w = document.createElement('div'), v = document.createElement('video');
+    w.className = 'vid';
+    Object.assign(v, {muted: true, playsInline: true, preload: 'auto', src: M.video[d].url});
+    v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+    v.dataset.drone = d;
+    const s = document.createElement('span'); s.textContent = d; s.style.background = HEX[i % HEX.length];
+    w.append(v, s); vbox.append(w);
+    return v;
+  });
+  // rebuilds
+  RB = M.rebuilds || []; rbIdx = 0; rbGeom && rbGeom.dispose(); rbGeom = null; setRbMode('release'); showRebuildBar();
+  // slices: load in playback order round the current one
+  sl = new Array(M.slices.length); loaded = 0;
+  const NS = M.slices.length, inflight = new Set();
+  const want = () => {
+    for (let d = 0; d <= Math.min(NS, WIN); d++) for (const s of d ? [cur + d, cur - d] : [cur]) {
+      const i = ((s % NS) + NS) % NS; if (!sl[i] && !inflight.has(i)) return i;
+    }
+    return -1;
+  };
+  const evict = () => {
+    if (WIN >= NS) return;
+    for (let i = 0; i < NS; i++) {
+      if (!sl[i] || sl[i] === person.geometry) continue;
+      let dd = Math.abs(i - cur); dd = Math.min(dd, NS - dd);
+      if (dd > WIN) { sl[i].dispose(); sl[i] = null; loaded-- }
+    }
+  };
+  const pump = async () => {
+    while (my === gen) {
+      evict();
+      const i = want();
+      if (i < 0) { if (WIN >= NS) return; await new Promise(r => setTimeout(r, 200)); continue }
+      inflight.add(i);
+      try {
+        const r = await fetch(`files/release/${M.slices[i].file}`);
+        if (!r.ok) throw new Error(`${r.status} ${M.slices[i].file}`);
+        const b = await r.arrayBuffer();
+        if (my !== gen) return;
+        if (!sl[i]) { sl[i] = geom(b); loaded++ }
+        if (i === cur && loaded === 1) resetView();
+      } catch (e) { console.error(e) }
+      inflight.delete(i);
+      status();
+    }
+  };
+  cur = 0; time = M.t_start; seek(M.t_start);
+  for (let w = 0; w < (coarse ? 3 : 6); w++) pump();
+  resetView();
+}
+
+function status() {
+  if (!M) return;
+  const k = M.slices[cur], n = sl[cur] ? sl[cur].userData.n : null;
+  $('status').textContent = loaded < M.slices.length && WIN >= M.slices.length
+    ? `Loading ${loaded}/${M.slices.length} slices`
+    : `${M.drones.length} drones · slice ${k.i} · ${n != null ? n.toLocaleString() + ' points' : 'loading'}`;
+}
+
+// ---------------------------------------------------------------- rebuilds
+function showRebuildBar() {
+  $('rebuildbar').style.display = RB.length ? 'flex' : 'none';
+  const mk = $('rbmark');
+  mk.style.display = RB.length ? 'block' : 'none';
+  if (!RB.length) return;
+  const r = RB[rbIdx], s = M.slices[r.slice] || M.slices[0];
+  mk.style.left = `calc(${(s.t_s - M.t_start) / (M.t_end - M.t_start) * 100}% - 1px)`;
+  info();
+}
+function info() {
+  const r = RB[rbIdx], s = M.slices[r.slice] || M.slices[0], rep = r.report || {}, cmp = rep.comparison || {};
+  const f = (x, d = 1) => x == null ? '–' : Number(x).toFixed(d);
+  const pts = rep.n_points != null ? `${Number(rep.n_points).toLocaleString()} points` : '';
+  const ch = cmp.chamfer_cm != null ? ` · Chamfer ${f(cmp.chamfer_cm)} cm to the release (${Number(cmp.n_release || 0).toLocaleString()} points)` : '';
+  const at = Math.abs(time - s.t_s) > 0.5 / M.fps || cur !== r.slice ? ` · <a id="rbjump">jump to ${s.t_s.toFixed(2)} s</a>` : '';
+  $('rbinfo').innerHTML = `Rebuilt moment at ${s.t_s.toFixed(2)} s${pts ? ' · ' + pts : ''}${ch}${rbMode !== 'release' ? at : ''}`;
+  const j = $('rbjump'); if (j) j.onclick = jumpRebuild;
+}
+async function ensureRebuild() {
+  if (rbGeom) return rbGeom;
+  const r = RB[rbIdx], b = await (await fetch(r.file)).arrayBuffer();
+  rbGeom = geom(b);
+  return rbGeom;
+}
+function jumpRebuild() { setPlaying(false); seek(M.slices[RB[rbIdx].slice].t_s + 1e-4) }
+function setRbMode(m) {
+  rbMode = m;
+  [...$('rbmode').children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  if (m !== 'release' && RB.length) ensureRebuild().then(() => { jumpRebuild(); info() });
+  else info0();
+}
+function info0() { if (RB.length) info() }
+[...$('rbmode').children].forEach(b => b.onclick = () => setRbMode(b.dataset.m));
+
+// ---------------------------------------------------------------- time
+function setPlaying(p) {
+  playing = p;
+  $('play').setAttribute('aria-label', p ? 'Pause' : 'Play');
+  $('playicon').setAttribute('d', p ? 'M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z' : 'M7 4.5v15l12.5-7.5z');
+  vids.forEach(v => { if (p) v.play().catch(() => {}); else v.pause() });
+  if (!p && M) syncVideos(true);
+}
+function videoTime(v, t) {
+  const ft = M.video[v.dataset.drone].frame_t, i = bisect(ft, t);
+  return (i + 0.5) / M.fps;
+}
+function syncVideos(force) {
+  vids.forEach(v => {
+    if (!v.readyState && !force) return;
+    const want = videoTime(v, time), tol = playing ? 0.15 : 0.5 / M.fps;
+    if (Math.abs(v.currentTime - want) > tol) v.currentTime = want;
+    if (playing && v.paused) v.play().catch(() => {});
+  });
+}
+function seek(t) {
+  time = Math.max(M.t_start, Math.min(M.t_end - 1e-3, t));
+  $('t').value = Math.round((time - M.t_start) / (M.t_end - M.t_start) * 10000);
+  cur = bisect(slT(), time);
+  syncVideos(true);
+  readout();
+}
+function readout() { $('time').textContent = `${(time - M.t_start).toFixed(2)} / ${(M.t_end - M.t_start).toFixed(2)} s` }
+$('t').oninput = e => { if (M) seek(M.t_start + e.target.value / 10000 * (M.t_end - M.t_start)) };
+$('play').onclick = () => { if (M) setPlaying(!playing) };
+$('reset').onclick = () => M && resetView();
+function setOrbit(on) { controls.autoRotate = on; $('orbit').setAttribute('aria-pressed', String(on)) }
+$('orbit').onclick = () => setOrbit(!controls.autoRotate);
+if (qs.get('orbit')) setOrbit(true);
+$('follow').onclick = () => { follow = !follow; $('follow').setAttribute('aria-pressed', String(follow)); lastCentre = null };
+addEventListener('keydown', e => {
+  if (!M || e.target.tagName === 'INPUT' && e.key !== ' ') return;
+  if (e.key === ' ') { e.preventDefault(); setPlaying(!playing) }
+  else if (e.key === 'ArrowRight') seek(time + 1 / M.fps);
+  else if (e.key === 'ArrowLeft') seek(time - 1 / M.fps);
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) setPlaying(false) });
+
+// ---------------------------------------------------------------- loop
+let last = performance.now(), shown = null, lastInfoK = -1;
+function step(dt) {
+  if (M) {
+    if (playing) {
+      time += dt;
+      if (time >= M.t_end) { time = M.t_start; syncVideos(true) }
+      $('t').value = Math.round((time - M.t_start) / (M.t_end - M.t_start) * 10000);
+      cur = bisect(slT(), time);
+      syncVideos(false);
+      readout();
+    }
+    let g = sl[cur];
+    for (let d = 1; !g && d < 8; d++) g = sl[cur - d] || sl[cur + d];
+    if (g && g !== shown) { person.geometry = g; shown = g; status() }
+    const r = RB[rbIdx], atRb = RB.length && rbGeom && cur === r.slice;
+    rebuild.geometry = rbGeom || rebuild.geometry;
+    rebuild.visible = !!(atRb && rbMode !== 'release');
+    person.visible = !(atRb && rbMode === 'rebuild');
+    rebuild.material = rbMode === 'both' ? matRebuildFlat : matRebuild;
+    if (RB.length && cur !== lastInfoK) { lastInfoK = cur; info() }
+    placeMarks(cur);
+    if (follow && (playing || lastCentre)) {
+      const p = centreAt(cur);
+      if (lastCentre) { const dl = p.clone().sub(lastCentre); camera.position.add(dl); controls.target.add(dl) }
+      lastCentre = p;
+    }
+  }
+  controls.update(dt);
+  renderer.render(scene, camera);
+  if (M) placeTags();
+}
+if (HERO) {
+  // deterministic frames for recording: the page advances only when told to
+  window.drone4d = {step, play: () => { playing = true }, ready: () => !!M && loaded === M.slices.length, resetView: () => resetView()};
+} else {
+  renderer.setAnimationLoop(now => { const dt = Math.min(0.1, (now - last) / 1000); last = now; step(dt) });
+}
+
+loadClips().catch(e => { $('status').textContent = 'Could not load the clips: ' + e.message; console.error(e) });
+</script>
+</body>
+</html>

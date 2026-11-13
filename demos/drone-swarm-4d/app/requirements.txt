@@ -1,0 +1,6 @@
+# Installed by Databricks Apps on top of its Python runtime.
+fastapi==0.162.0
+uvicorn==0.54.0
+databricks-sdk==0.157.0
+pyarrow==21.0.0
+numpy==1.26.4
