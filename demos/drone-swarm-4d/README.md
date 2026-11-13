@@ -50,7 +50,7 @@ Every video frame carries the drone's own clock, so all drones, all frames and a
 - A workspace with **Unity Catalog**, **serverless compute for jobs** and **Databricks Apps**.
 - An existing **catalog** on which you have `USE CATALOG` and `CREATE SCHEMA`. The bundle creates a schema; it does not create a catalog.
 - Outbound internet from serverless compute, to download the release from Hugging Face (public, no token).
-- For the GPU hands-on: **serverless GPU compute (AI Runtime)** and the `air` CLI (or `databricks air`); see [the guide](guide/REBUILD_A_MOMENT.md).
+- For the GPU hands-on: **serverless GPU compute (AI Runtime)** and the `air` CLI (v1.2.1 or later); see [the guide](guide/REBUILD_A_MOMENT.md).
 
 ## Deploy
 

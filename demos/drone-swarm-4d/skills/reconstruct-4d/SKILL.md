@@ -137,6 +137,7 @@ The heavy stages are short, independent GPU tasks, which suits AIR well. Across 
 - **Exit hard.** Wrap `main` so that any exception prints a traceback and calls `os._exit(1)`. Add an in-job watchdog timer and a stall watchdog (no progress for 15 min → `faulthandler` dump, then exit). A dead child process once kept a GPU for 11 minutes.
 - In shell entrypoints, use `set -euo pipefail` and `exec` the Python process, so failures reach the job's status.
 - Set `timeout_minutes` and `max_retries: 0`. Re-submit by hand after reading the log.
+- **Validate the spec with `air run -f job.yaml --dry-run`** before submitting. The spec format moves between `air` versions: `environment.version` needs an inline `dependencies` list, `include_paths` takes file names rather than globs, and `mlflow_experiment_directory` must start with `/Workspace`.
 - **Smoke-test through the real entrypoint and output path** (`entry.sh → job`, a few slices, about 3 min), never a toy copy. A small smoke test can still miss scale-dependent stalls (`svd(full_matrices=True)` on a big matrix cost 10 min), so smoke-test at realistic sizes where it matters.
 - **Cache data prep on the volume,** keyed by its inputs and settings. One smoke test went from 31 minutes (cancelled) to 7. Cache model weights the same way.
 - **Volumes take whole-file writes:** write `name.tmp`, then rename, and fall back to copy. Copy videos to local disk before decoding, because FUSE seeks are slow. Write a manifest last, so consumers know a shard is complete.

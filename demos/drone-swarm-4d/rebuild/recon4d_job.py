@@ -121,24 +121,11 @@ def pick_frames(frames, drones, times):
 
 
 def decode_needed(video: Path, wanted: set[int], gray: bool = False) -> dict[int, np.ndarray]:
-    """One sequential pass over a video, keeping only the wanted frame indices (exact, unlike seeks)."""
-    cap = cv2.VideoCapture(str(video))
-    if not cap.isOpened():
-        raise RuntimeError(f"cannot open {video}")
-    got, i, last = {}, 0, max(wanted)
-    try:
-        while i <= last:
-            if i in wanted:
-                ok, img = cap.read()
-                if not ok:
-                    raise RuntimeError(f"{video}: cannot decode frame {i}")
-                got[i] = (img[..., 0] if img.ndim == 3 else img) > 127 if gray else img[..., ::-1].copy()
-            elif not cap.grab():
-                raise RuntimeError(f"{video}: ends before frame {i}")
-            i += 1
-    finally:
-        cap.release()
-    return got
+    """One sequential pass over a video, keeping only the wanted frames: RGB, or a boolean mask when gray=True."""
+    out = {}
+    for i, img in pi.decode_frames(video, wanted, gray).items():
+        out[i] = (img[..., 0] if img.ndim == 3 else img) > 127 if gray else img[..., ::-1].copy()
+    return out
 
 
 def pose_of(row, cams, drones, k_pos, dr):

@@ -28,7 +28,7 @@ The job logs a start marker, then one line as each stage starts and ends, and ex
 ## Before you start
 
 - The bundle is deployed and `load_release` has run: the release is in `/Volumes/<catalog>/<schema>/release_files/release/`.
-- **Serverless GPU compute (AI Runtime)** is enabled for the workspace, and you can submit jobs with the `air` CLI (or `databricks air`), authenticated with a profile.
+- **Serverless GPU compute (AI Runtime)** is enabled for the workspace, and you can submit jobs with the `air` CLI (v1.2.1 or later: `uv tool install databricks-air`), authenticated with a profile.
 - `WRITE VOLUME` on `release_files` (you created it, so you have it).
 - Outbound internet from the job: it installs Pi3's code (pinned to a commit) and downloads the Pi3X weights (about 5.4 GB, pinned to a revision) from Hugging Face.
 
@@ -53,7 +53,7 @@ WHERE clip_id = 'clip1_three_drones' AND abs(t_s - 4.0) < 0.02;
 
 In `rebuild/job.yaml`, replace the placeholders:
 
-- `<workspace-folder>`: a workspace folder for the MLflow experiment, e.g. `/Users/<you>`;
+- `<you>` in `mlflow_experiment_directory`: your workspace user folder (the path must start with `/Workspace`);
 - `<run_name>`: anything, e.g. `clip1-t4`;
 - in `command`: `<catalog>`, `<schema>`, and the clip and time (`--clip clip1_three_drones --t 4.0`).
 
@@ -72,7 +72,7 @@ Options you can add to `command`:
 
 ```bash
 cd demos/drone-swarm-4d/rebuild
-air run --file job.yaml -p <profile>      # or: databricks air run --file job.yaml -p <profile>
+air run --file job.yaml -p <profile>
 ```
 
 The job runs on one A10 (`GPU_1xA10`), the smallest shape, which has room for Pi3X in bf16 with three views. Queue and provisioning time are not billed; installs, the weights download and the run are.
@@ -146,7 +146,7 @@ FROM read_files('/Volumes/<catalog>/drone_swarm_4d/release_files/rebuilds/*/*.js
 - **The plumbing only, in seconds:** `--model stub` swaps Pi3X for a stand-in that renders depth from the released slice in a deliberately different frame and scale. Everything else runs for real: decoding, masks, the Sim(3), the person cut, fusion, the comparison and the files. The stand-in's cloud lands on the released surface (rebuild-to-release median under a centimetre), which checks the geometry end to end.
 
   ```bash
-  pip install numpy opencv-python-headless scipy pyarrow
+  pip install numpy opencv-python-headless scipy pyarrow imageio-ffmpeg
   python rebuild/rebuild_moment.py --release /path/to/drone-swarm-4d --clip clip1_three_drones --t 4.0 \
       --out ./rebuilds --model stub --device cpu
   ```

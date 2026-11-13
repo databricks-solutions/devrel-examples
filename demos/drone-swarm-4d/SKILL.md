@@ -46,7 +46,7 @@ Follow [`guide/REBUILD_A_MOMENT.md`](guide/REBUILD_A_MOMENT.md). In short, from 
 
 ```bash
 cd rebuild
-air run --file job.yaml -p <profile>     # or: databricks air run --file job.yaml -p <profile>
+air run --file job.yaml -p <profile>     # the air CLI, v1.2.1 or later
 ```
 
 - The job writes `/Volumes/<catalog>/<schema>/release_files/rebuilds/<clip>/sNNN.bin` and `sNNN.json`; reload the App and switch to *Your rebuild* or *Both*.

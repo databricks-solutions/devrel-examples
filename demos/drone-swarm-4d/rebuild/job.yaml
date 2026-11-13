@@ -1,19 +1,25 @@
 # Databricks AI Runtime (serverless GPU) job spec: rebuild one moment of a clip with Pi3X. Submit with the AIR CLI:
-#   air run --file job.yaml -p <profile>          (or: databricks air run --file job.yaml -p <profile>)
+#   air run --file job.yaml -p <profile>
 # Fill in the <...> placeholders. Inputs and outputs live on the bundle's volume (release/ and rebuilds/).
 experiment_name: drone-swarm-4d-rebuild
-mlflow_experiment_directory: <workspace-folder>/rebuild_jobs
+mlflow_experiment_directory: /Workspace/Users/<you>/rebuild_jobs
 mlflow_run_name: <run_name>
 compute:
   accelerator_type: GPU_1xA10          # Pi3X on 2-3 views at 672x378 fits a 24 GB A10 in bf16
   num_accelerators: 1
 environment:
-  version: databricks_ai_v6            # ships torch, numpy, opencv; don't pin those again
+  version: databricks_ai_v6            # ships torch, numpy, opencv: don't pin those again
+  dependencies:                        # only what the base lacks (Pi3X itself is installed by entry.sh)
+    - safetensors==0.6.2
+    - huggingface_hub==0.36.0
+    - pyarrow==21.0.0
+    - scipy==1.15.3
+    - imageio-ffmpeg==0.6.0
 code_source:
   type: snapshot
   snapshot:
     root_path: .
-    include_paths: ["*.py", "*.sh", "job.yaml"]
+    include_paths: ["entry.sh", "rebuild_moment.py", "recon4d_job.py"]   # file names, not globs
 command: "bash \"$CODE_SOURCE_PATH/entry.sh\" --release /Volumes/<catalog>/<schema>/release_files/release --clip clip1_three_drones --t 4.0 --out /Volumes/<catalog>/<schema>/release_files/rebuilds"
 max_retries: 0
 timeout_minutes: 30                    # always set; queue time before start is not billed

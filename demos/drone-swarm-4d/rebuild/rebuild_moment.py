@@ -98,21 +98,34 @@ def write_cloud(P: np.ndarray, C: np.ndarray) -> bytes:
     return a.tobytes()
 
 
-def read_frame(video: Path, index: int) -> np.ndarray:
-    """Frame `index` of a video, decoded sequentially (exact, unlike container seeks). BGR or gray as stored."""
-    cap = cv2.VideoCapture(str(video))
-    if not cap.isOpened():
-        raise RuntimeError(f"cannot open {video}")
+def decode_frames(video: Path, wanted: set[int], gray: bool = False) -> dict[int, np.ndarray]:
+    """The wanted frame indices of a video, in one sequential pass (exact, unlike container seeks): BGR, or 2-D gray.
+    Decoded by imageio-ffmpeg's static ffmpeg in a subprocess: OpenCV in the AIR base image has no FFmpeg, and PyAV's
+    bundled OpenSSL aborts on the hosts' FIPS self-test."""
+    import imageio_ffmpeg
+
+    got, last = {}, max(wanted)
+    frames = imageio_ffmpeg.read_frames(str(video), pix_fmt="gray" if gray else "bgr24", bpp=1 if gray else 3)
     try:
-        for _ in range(index):
-            if not cap.grab():
-                raise RuntimeError(f"{video}: ends before frame {index}")
-        ok, img = cap.read()
-        if not ok:
-            raise RuntimeError(f"{video}: cannot decode frame {index}")
-        return img
+        meta = next(frames)
+        w, h = meta["size"]
+        for i, buf in enumerate(frames):
+            if i in wanted:
+                a = np.frombuffer(buf, np.uint8)
+                got[i] = a.reshape(h, w).copy() if gray else a.reshape(h, w, 3).copy()
+            if i >= last:
+                break
     finally:
-        cap.release()
+        frames.close()
+    missing = sorted(wanted - got.keys())
+    if missing:
+        raise RuntimeError(f"{video}: ends before frame {missing[0]}")
+    return got
+
+
+def read_frame(video: Path, index: int, gray: bool = False) -> np.ndarray:
+    """Frame `index` of a video: BGR, or 2-D gray."""
+    return decode_frames(video, {index}, gray)[index]
 
 
 def load_inputs(release: Path, clip: str, t: float | None, slice_i: int | None, scratch: Path):
@@ -142,7 +155,7 @@ def load_inputs(release: Path, clip: str, t: float | None, slice_i: int | None, 
         shutil.copyfile(d / "video" / f"{drone}.mp4", vid)
         shutil.copyfile(d / "masks" / f"{drone}.mkv", msk)
         img = read_frame(vid, int(r["frame_index"]))
-        m = read_frame(msk, int(r["frame_index"]))
+        m = read_frame(msk, int(r["frame_index"]), gray=True)
         m = (m[..., 0] if m.ndim == 3 else m) > 127
         K = np.array([[r["fx"], 0, r["cx"]], [0, r["fy"], r["cy"]], [0, 0, 1]], dtype=np.float64)
         sx, sy = img.shape[1] / float(r["width"]), img.shape[0] / float(r["height"])   # intrinsics are for (width, height)
